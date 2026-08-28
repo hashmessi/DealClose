@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* ─── DealClose Design System — Brutalist Editorial on Warm Canvas ─── */
+/* Reference: DESIGN (1).md — Dayos / AI for Business style */
+
+@theme {
+  /* Brand Colors */
+  --color-carbon-black: #000000;
+  --color-paper-white: #ffffff;
+  --color-warm-canvas: #e5e5e5;
+  --color-mist-gray: #f3f3f3;
+  --color-ash: #c6c6c6;
+  --color-smoke: #979797;
+  --color-slate: #444444;
+  --color-graphite: #2f2f2f;
+  --color-mint-chip: #d1ffca;
+  --color-voltage-yellow: #fff100;
+
+  /* Surfaces */
+  --color-surface-canvas: #e5e5e5;
+  --color-surface-card: #ffffff;
+  --color-surface-inverted: #000000;
+  --color-surface-mist: #f3f3f3;
+
+  /* Typography — Families */
+  --font-display: 'Barlow Condensed', 'Anton', ui-sans-serif, system-ui;
+  --font-body: 'Inter', ui-sans-serif, system-ui;
+  --font-mono: 'JetBrains Mono', 'Geist Mono', ui-monospace, monospace;
+
+  /* Spacing */
+  --spacing-unit: 8px;
+
+  /* Border Radius */
+  --radius-btn: 6px;
+  --radius-card: 24px;
+  --radius-card-lg: 32px;
+  --radius-card-xl: 64px;
+  --radius-pill: 48px;
+  --radius-tag: 64px;
+}
+
+/* ─── Base Reset ─── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--color-warm-canvas);
+  color: var(--color-carbon-black);
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+/* ─── Typography Utilities ─── */
+.dc-display {
+  font-family: 'Barlow Condensed', 'Anton', ui-sans-serif, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.dc-mono {
+  font-family: 'JetBrains Mono', 'Geist Mono', ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: -0.03em;
+}
+
+/* ─── Keyframe Animations ─── */
+@keyframes dc-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dc-pulse-mint {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes dc-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dc-spin {
+  animation: dc-spin 0.7s linear infinite;
+}
+
+.dc-slide-up {
+  animation: dc-slide-up 0.35s ease-out forwards;
+}
+
+.dc-fade-in {
+  animation: dc-fade-in 0.25s ease-out forwards;
+}

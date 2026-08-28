@@ -15,8 +15,10 @@
 | 2 | AI Structuring + Document Generation | GPT-4o field extraction with confidence scoring + Nutrient DWS PDF generation | AI-01–03, DOC-01–04, BACKEND-02 | ~2.5hr |
 | 3 | Human Review + eSign Handoff | HITL review UI + Foxit eSign integration + full deal audit trail | HITL-01–04, SIGN-01–04, BACKEND-03 | ~2hr |
 | 4 | Demo Polish + Integration Validation | End-to-end smoke test with real demo address, error state handling, UI polish | All cross-cutting | ~1hr |
+| 5 | Production Deployment & Verification | Deploy to Vercel/Node.js + execute 8-step verification runbook (SETUP.md / VERIFY.md) | DEVOPS-01–05 | ~1hr |
 
-**Total P0 estimate: ~8 hours.** Demo must be bulletproof before submission.
+**Total P0 estimate: ~9 hours.** Demo must be bulletproof before submission.
+
 
 ---
 
