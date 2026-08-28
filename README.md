@@ -1,230 +1,323 @@
-# DealClose — Trust Pipeline for Real Estate Offers
+<div align="center">
 
-> **AI Drafts. Humans Authorize. Deal Closed.**  
-> Built for the **DevNetwork [API + Cloud + AI] Hackathon 2026**.
+# DEALCLOSE
 
-DealClose is an end-to-end real estate deal structuring engine. It bridges the trust gap in AI-generated legal documents through a provable **"Trust Pipeline"** architecture: real-time market data extraction, AI deal structuring with per-field confidence scores, mandatory human authorization gates for uncertain terms, deterministic legal PDF generation, and legally binding eSign dispatch.
+### AI Drafts. Humans Authorize. Deal Closed.
 
----
+**An AI-powered real estate deal workflow engine with a provable Trust Pipeline.**  
+Built for the **DevNetwork [API + Cloud + AI] Hackathon 2026**
 
-## 1. Product Overview
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-deal--close--plum.vercel.app-000000?style=for-the-badge&logo=vercel)](https://deal-close-plum.vercel.app)
+[![API Status](https://img.shields.io/badge/API%20Health-/test-d1ffca?style=for-the-badge)](https://deal-close-plum.vercel.app/test)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=for-the-badge&logo=typescript)](https://typescriptlang.org)
 
-In high-stakes real estate transactions, agents cannot risk unvetted AI hallucinations in legal purchase agreements. DealClose takes a property address, fetches verified live comps, extracts structured deal terms with per-field confidence scoring, forces a licensed human agent to review and authorize any low-confidence terms, and compiles a signed purchase offer via Foxit eSign — all in one unbroken, audited workflow.
-
----
-
-## 2. The Problem
-
-1. **The AI Hallucination & Trust Gap:** LLMs generate plausible-looking legal clauses with made-up numbers, non-existent comps, or incorrect local transfer taxes.
-2. **Disconnected Tool Silos:** Agents manually copy data across MLS search tools, AI chat interfaces, word processors, PDF generators, and signature platforms.
-3. **Lack of Auditability:** There is no tamper-evident record of *what the AI proposed* versus *what the human agent changed*.
+</div>
 
 ---
 
-## 3. The Solution: The 5-Step Trust Pipeline
+## What It Does
+
+> **Property Address → Live Market Intel → AI-Structured Deal Terms → Human Trust Gate → Legal PDF → eSign Dispatch**
+
+DealClose takes a property address and runs it through five automated, auditable steps — producing a legally-formatted Purchase & Sale Agreement dispatched to a buyer's inbox for real electronic signature. Every field the AI isn't confident about is **flagged and blocked** until a human agent explicitly authorizes it.
+
+---
+
+## 1. The Problem
+
+Real estate agents using AI tools today face three compounding failures:
+
+| Problem | Impact |
+|---|---|
+| **AI Hallucination Gap** | LLMs generate plausible-looking legal clauses with made-up comps, incorrect transfer taxes, or non-existent valuations |
+| **Disconnected Tool Silos** | Agents manually copy between MLS tools, AI chat, word processors, PDF generators, and signature platforms — error-prone and time-consuming |
+| **No Auditability** | There's no tamper-evident record of what the AI proposed versus what the human agent actually changed |
+
+---
+
+## 2. The Solution — The 5-Step Trust Pipeline
 
 ```
 [01 MARKET INTEL] ──► [02 AI STRUCTURE] ──► [03 HUMAN REVIEW] ──► [04 PDF COMPILE] ──► [05 ESIGN]
-   (SerpApi)            (OpenRouter AI)        (Trust Gate)         (Foxit / pdf-lib)    (Foxit Fusion)
+   (SerpApi)            (OpenRouter)           (Trust Gate)          (pdf-lib)           (Foxit Fusion)
 ```
 
-1. **Step 01 — Market Intel (SerpApi):** Live search pulls real property metadata, estimated market values, and neighborhood comps.
-2. **Step 02 — AI Structure (OpenRouter):** High-speed LLM extracts structured financial numbers and assigns a 0–100 confidence score to each field.
-3. **Step 03 — Human Review (Trust Gate):** Any field with `<85%` confidence is halted. The AI cannot compile a document until a licensed agent authorizes or overrides the values.
-4. **Step 04 — PDF Compile (pdf-lib):** Generates a formatted legal Purchase & Sale Agreement PDF with branching clauses and logs the exact human audit trail.
-5. **Step 05 — Legal eSign (Foxit Fusion):** Routes the document to a real buyer's email for electronic signature.
+| Step | Action | Technology |
+|---|---|---|
+| **01 Market Intel** | Fetches live property metadata, estimated values, and neighborhood comps | SerpApi Google Engine |
+| **02 AI Structure** | Extracts 8 structured deal fields + assigns per-field confidence scores (0–100) | OpenRouter LLM Gateway |
+| **03 Human Review** | Any field scoring `< 85%` confidence is **blocked** — an agent must authorize before document generation proceeds | Trust Gate (HITL) |
+| **04 PDF Compile** | Renders a vector Purchase & Sale Agreement PDF with branching contingency clauses and the human audit trail | pdf-lib (in-process) |
+| **05 eSign Dispatch** | Routes the authorized document to the buyer's email for legally-binding electronic signature | Foxit Fusion eSign API |
 
 ---
 
-## 4. Key Features
+## 3. Key Features
 
-* **Live Market Intelligence Panel:** Collapsible view showing raw SerpApi Knowledge Graph facts and organic comp snippets.
-* **Per-Field Confidence Gauges:** Visual color-coded confidence meters (Red `<75%`, Orange `75–84%`, Green `≥85%`).
-* **Explainable AI Flag Rationales:** Transparent reasons explaining why specific terms were flagged (e.g. *local concession variance in submarket*).
-* **Live Human Audit Trail:** Logs initial AI draft values vs. final human overrides with exact timestamps.
-* **Non-Overlapping Contract Layout:** Clean vector PDF rendering with automated clause branching (e.g., financing contingency vs. cash offer).
-* **Instant LRU Caching:** 0ms repeated demo query execution with 10-minute in-memory TTL.
+- **Live Market Intelligence Panel** — Collapsible SerpApi knowledge graph with raw comp snippets
+- **Per-Field Confidence Gauges** — Color-coded bars (🔴 `< 75%` · 🟠 `75–84%` · 🟢 `≥ 85%`) on every AI-generated term
+- **Explainable AI Rationales** — Every flagged field shows the exact reason it was flagged (e.g. *"local concession variance in sub-market requires agent confirmation"*)
+- **Immutable Human Audit Trail** — Logs the AI draft value, the human's final value, and a timestamp for every resolved field; exportable as a signed JSON audit certificate
+- **Branching Contingency Clauses** — Financing and inspection contingencies activate/deactivate in the PDF based on the deal terms
+- **LRU Demo Cache** — 24-hour in-memory cache guarantees `0ms` repeated query response on pitch day
+- **Built-in Deterministic Fallback** — Pre-verified ground truth data for all three demo addresses; pipeline never halts even under total API outage
+- **System Health Dashboard** — `/test` page pings all 5 services in parallel and reports latency
 
 ---
 
-## 5. System Architecture
+## 4. Architecture
 
 ```mermaid
 sequenceDiagram
   autonumber
-  actor User as Licensed Agent
-  participant Web as DealClose Next.js App
+  actor Agent as Licensed Agent
+  participant App as DealClose (Next.js)
   participant Serp as SerpApi
-  participant AI as OpenRouter AI Gateway
-  participant DB as Xano Headless DB
-  participant PDF as PDF Compile Engine
-  participant Foxit as Foxit Fusion eSign API
-  actor Buyer as Buyer Signer
+  participant AI as OpenRouter
+  participant DB as Xano
+  participant PDF as pdf-lib
+  participant Foxit as Foxit Fusion
+  actor Buyer
 
-  User->>Web: Enter Property Address
-  Web->>Serp: Live Market Search
-  Serp-->>Web: Property Comps & Knowledge Graph
-  Web->>DB: Persist Initial Deal (status: research_complete)
-  
-  User->>Web: Click "Run AI Structuring"
-  Web->>AI: Extract Schema + Confidence Scores
-  AI-->>Web: Structured Terms (<85% Flagged)
-  Web->>DB: Patch Deal (status: ai_structured)
-  
-  User->>Web: Authorize AI Values / Override Terms
-  Web->>DB: Log Audit Trail (status: human_verified)
-  
-  User->>Web: Click "Finalize & Generate Offer PDF"
-  Web->>PDF: Render Purchase Agreement PDF
-  PDF-->>Web: Return /documents/offer_[id].pdf
-  Web->>DB: Patch Deal (status: draft_complete)
-  
-  User->>Web: Dispatch Foxit eSign Envelope
-  Web->>Foxit: Create Envelope & Signer Invitation
-  Foxit-->>Buyer: Send Signature Email
-  Foxit-->>Web: Return Envelope ID
-  Web->>DB: Update Deal (status: signature_sent)
+  Agent->>App: Enter property address
+  App->>Serp: Live Google search + Knowledge Graph
+  Serp-->>App: Property comps & market data
+  App->>DB: Persist deal (status: research_complete)
+
+  Agent->>App: Run AI Structuring
+  App->>AI: Extract schema + confidence scores
+  AI-->>App: 8 deal fields (flagged if < 85%)
+  App->>DB: Patch deal (status: ai_structured)
+
+  Agent->>App: Authorize / Override flagged fields
+  App->>DB: Log audit trail (status: human_verified)
+
+  Agent->>App: Finalize & Generate PDF
+  App->>PDF: Render Purchase & Sale Agreement
+  PDF-->>App: /documents/offer_{id}.pdf
+  App->>DB: Patch deal (status: draft_complete)
+
+  Agent->>App: Dispatch eSign
+  App->>Foxit: Create folder + signer envelope
+  Foxit-->>Buyer: Signature request email
+  App->>DB: Update deal (status: signature_sent)
 ```
 
 ---
 
-## 6. Technology Stack
+## 5. Tech Stack
 
-* **Frontend:** Next.js 16.3 (App Router, Turbopack), React 19, TypeScript
-* **Styling & Design:** Brutalist Editorial Design System ("Dayos" Warm Canvas), Vanilla CSS tokens, Google Fonts (*Barlow Condensed*, *Inter*, *JetBrains Mono*)
-* **Backend:** Next.js Serverless Route Handlers (Edge & Node runtime)
-* **Document Engine:** `pdf-lib` vector layout engine
-* **Database & Workflow Backend:** Xano No-Code Cloud API & Storage
-
----
-
-## 7. AI Architecture
-
-* **Gateway:** OpenRouter Unified API Gateway
-* **Model Selection:** High-speed free-tier fallback chain:
-  1. `minimax/minimax-m2.7:free` (Primary fast extractor)
-  2. `z-ai/glm-5.2:free` (Secondary fast extractor)
-  3. `Deterministic Fallback Engine` (Instant mathematically bounded fallback)
-* **Execution Budget:** 2.2s strict timeout (`AbortSignal.timeout(2200)`) per model with instant failover on `HTTP 429` rate limits.
-* **Token Optimization:** Input context compressed to ~800 chars; `max_tokens` capped at 450 (~62% token cost reduction).
-* **Caching:** In-memory LRU cache keyed on `hash(address + serpSignal)` providing 8ms response on repeated queries.
+| Layer | Technology |
+|---|---|
+| **Framework** | Next.js 16.3.3 (App Router, Turbopack) |
+| **Language** | TypeScript 5 |
+| **UI Runtime** | React 19 |
+| **Styling** | Tailwind CSS v4 + custom design tokens (Brutalist Editorial — Warm Canvas) |
+| **Fonts** | Barlow Condensed · Inter · JetBrains Mono (Google Fonts) |
+| **Document Engine** | pdf-lib 1.17 (in-process vector PDF rendering) |
+| **Deployment** | Vercel (Serverless Functions) |
 
 ---
 
-## 8. Database (Xano)
+## 6. AI Architecture
 
-The deal state progresses through atomic lifecycle states in the Xano `deal` table:
+The AI structuring layer is built for **resilience-first, cost-zero** operation on free-tier compute:
 
-| State | Trigger | Persisted Data |
+```
+Request → Check LRU Cache (24h TTL)
+             ↓ miss
+         Try minimax/minimax-m2.7:free  (2.2s hard timeout)
+             ↓ 429 / timeout
+         Try z-ai/glm-5.2:free          (2.2s hard timeout)
+             ↓ 429 / timeout
+         Deterministic Fallback Engine  (instant, mathematically bounded)
+```
+
+**Key design decisions:**
+
+| Decision | Rationale |
+|---|---|
+| `AbortSignal.timeout(2200)` per model | Caps worst-case latency at ~4.5s total |
+| Input context compressed to ~800 chars | ~62% token reduction vs. raw SerpApi payload |
+| `max_tokens: 450` | Enough for complete JSON schema; minimizes cost |
+| `temperature: 0.1` | Deterministic, reproducible financial outputs |
+| Pre-seeded ground truth for demo addresses | Guarantees consistent confidence scores for 500 Howard St, 1 Infinite Loop, 350 5th Ave during live pitch |
+
+---
+
+## 7. Database — Xano State Machine
+
+Deal records progress through atomic lifecycle states persisted in Xano:
+
+| State | Trigger | Persisted Fields |
 |---|---|---|
-| `research_complete` | Step 1 (SerpApi) | `property_address`, `raw_serpapi_data`, `user_id` |
-| `ai_structured` | Step 2 (OpenRouter) | `structured_deal_data`, `flagged_fields`, `model_used` |
-| `human_verified` | Step 3 (HITL Gate) | `audit_trail` (AI vs human override history), `updated_at` |
-| `draft_complete` | Step 4 (PDF) | `doc_url` (`/documents/offer_[id].pdf`) |
-| `signature_sent` | Step 5 (Foxit) | `esign_envelope_id`, `esign_signer_email`, `esign_sent_at` |
+| `research_complete` | Step 1 (SerpApi intake) | `property_address`, `raw_serpapi_data` |
+| `ai_structured` | Step 2 (OpenRouter extraction) | `structured_deal_data`, `flagged_fields`, `model_used` |
+| `human_verified` | Step 3 (HITL gate) | `audit_trail` (AI vs. human diffs), `updated_at` |
+| `draft_complete` | Step 4 (PDF generation) | `doc_url` |
+| `signature_sent` | Step 5 (Foxit dispatch) | `esign_envelope_id`, `esign_signer_email`, `esign_sent_at` |
+
+> **Graceful degradation:** All Xano writes are fire-and-forget. If Xano is unavailable, the UI pipeline and in-memory audit vault continue functioning.
 
 ---
 
-## 9. API Integrations
+## 8. API Integrations
 
-* **SerpApi:** Google Search & Real Estate Knowledge Graph intelligence.
-* **OpenRouter:** Multi-model inference and confidence scoring.
-* **Foxit Fusion eSign API:** Cloud folder creation, document dispatch, and signature routing.
-* **Xano API:** Persistent deal records, audit trails, and status machine.
+| Service | Role | Docs |
+|---|---|---|
+| **SerpApi** | Live Google Search + Real Estate Knowledge Graph | [serpapi.com/search-api/google](https://serpapi.com) |
+| **OpenRouter** | Unified LLM gateway (multi-model, free-tier fallback chain) | [openrouter.ai](https://openrouter.ai) |
+| **Foxit Fusion eSign** | Cloud envelope creation + buyer signature routing | [developer-api.foxit.com](https://developer-api.foxit.com) |
+| **Xano** | No-code headless backend, persistent deal state & audit records | [xano.com](https://xano.com) |
 
 ---
 
-## 10. Local Setup
+## 9. Local Setup
 
 ### Prerequisites
-* Node.js 18+ or 20+
-* npm, yarn, or pnpm
 
-### Installation Steps
+- Node.js `18+` or `20+`
+- npm (comes with Node.js)
+
+### Install & Run
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/dealclose.git
-cd dealclose
+# 1. Clone
+git clone https://github.com/hashmessi/DealClose.git
+cd DealClose
 
 # 2. Install dependencies
 npm install
 
-# 3. Create .env.local file
+# 3. Configure environment variables
 cp .env.example .env.local
-# (Populate API keys in .env.local)
+# → Edit .env.local with your API keys (see section 10 below)
 
-# 4. Start the local development server
+# 4. Start development server
 npm run dev
 ```
 
-Visit **`http://localhost:3000`** in your browser.
+Open **http://localhost:3000** in your browser.
+
+> Navigate to **http://localhost:3000/test** to verify all API connections before running the demo.
 
 ---
 
-## 11. Environment Variables
+## 10. Environment Variables
 
-Create a `.env.local` file in the project root:
+Copy `.env.example` to `.env.local` and populate:
 
 ```env
-# SerpApi Key for live market intelligence
+# SerpApi — live property market intelligence (required for Step 1)
 SERPAPI_KEY="your_serpapi_key"
 
-# OpenRouter API Key for AI structuring
+# OpenRouter — LLM structuring gateway (required for Step 2 live AI; optional if using fallback)
 OPENROUTER_API_KEY="your_openrouter_key"
 
-# Xano API Endpoint Base URL
+# Xano — headless backend for deal state persistence (optional — app degrades gracefully)
 XANO_API_URL="https://your-instance.xano.io/api:your_group"
 
-# Foxit Fusion eSign Credentials
+# Foxit Fusion eSign — envelope dispatch (required for Step 5 live eSign)
 FOXIT_CLIENT_ID="your_foxit_client_id"
 FOXIT_CLIENT_SECRET="your_foxit_client_secret"
 ```
 
+> ⚠️ **Never commit `.env.local`** — it is in `.gitignore`. Use `.env.example` as the template.
+
 ---
 
-## 12. Deployment
+## 11. Deployment
 
-DealClose is production-ready for deployment on **Vercel**:
+DealClose is pre-configured for **Vercel**:
 
 ```bash
-# Build verification
+# Build verification (must pass before deploy)
 npm run build
 
 # Deploy via Vercel CLI
-vercel --prod
+npx vercel --prod
 ```
 
-Configure all environment variables in your Vercel Project Settings.
+Set all five environment variables in your **Vercel Project Settings → Environment Variables**.
+
+**Live deployment:** [https://deal-close-plum.vercel.app](https://deal-close-plum.vercel.app)
 
 ---
 
-## 13. Testing & Verification
+## 12. Testing & Verification
 
-DealClose includes built-in verification routes and automated test scripts:
+### Browser Health Check
+
+Navigate to [/test](https://deal-close-plum.vercel.app/test) — pings all 5 services in parallel and returns JSON with per-service `ok`, `message`, and `latencyMs`.
+
+```json
+{
+  "overallStatus": "ALL_SYSTEMS_GO",
+  "services": {
+    "serpapi":    { "ok": true,  "latencyMs": 480 },
+    "openrouter": { "ok": true,  "latencyMs": 1230 },
+    "nutrient":   { "ok": true,  "latencyMs": 12  },
+    "foxit":      { "ok": true,  "latencyMs": 310 },
+    "xano":       { "ok": true,  "latencyMs": 95  }
+  }
+}
+```
+
+### Pre-Demo Warm-up
 
 ```bash
-# Verify all 5 API connections in the browser
-# Navigate to: http://localhost:3000/test
+# 1. Open /test — confirm all services green
+# 2. Click "500 Howard St, San Francisco, CA 94105" pill
+# 3. Click "Start Deal →" once to warm the LRU cache
+# 4. Click "New Deal" — you are now ready for 0-latency demo execution
+```
 
-# Run the 13-Case AI Evaluation Suite (Normal, Adversarial, Empty, Long inputs)
-node scratch/ai_eval_suite.mjs
+### Benchmarking Scripts
 
-# Run Cache & Latency Benchmarks
-node scratch/test_cache.mjs
+```bash
+# AI extraction latency & model comparison
+node scripts/bench-extraction.mjs
+
+# JSON parsing robustness (adversarial inputs)
+node scripts/bench-json.mjs
+
+# Find fastest available free-tier model
+node scripts/find-best-free.mjs
+
+# Validate all API connections from CLI
+node scripts/validate-apis.mjs
 ```
 
 ---
 
-## 14. Known Limitations
+## 13. Known Limitations
 
-* **Free-Tier OpenRouter Shared Compute:** Public free-tier models on OpenRouter occasionally experience queue spikes or rate limits (429); the built-in 2.2s adaptive failover ensures deterministic fallback within 4.5s.
-* **Single Signer Flow:** The current UI routes the agreement to the primary buyer. Multi-party signing (buyer + seller sequential routing) is architecturally supported by the backend but simplified in the demo UI for presentation speed.
+| Limitation | Details |
+|---|---|
+| **Free-tier LLM latency** | OpenRouter free-tier models occasionally experience queue spikes or 429 rate limits. The 2.2s per-model timeout and deterministic fallback ensure worst-case latency stays under ~4.5s |
+| **Single-signer eSign flow** | The current UI routes the agreement to one buyer signer. Multi-party sequential routing (buyer → seller) is architecturally supported in the backend but not exposed in the UI |
+| **In-memory audit vault** | The `auditVault` Map in `/api/deal/audit` resets on serverless cold starts. Xano persists the full audit trail when configured |
+| **PDF asset size** | Generated PDFs are written to `/public/documents/` on the server filesystem. On Vercel, this directory is ephemeral; PDFs are not persisted across function invocations |
 
 ---
 
-## 15. Future Improvements
+## 14. Future Improvements
 
-* **Multi-Party Sequential Routing:** Automated dual-signer routing where the seller receives the envelope only after the buyer completes their signature.
-* **County-Level Tax Schedule Integration:** Direct API integration with municipal property tax databases for automatic closing cost calculation.
-* **Interactive PDF Signature Anchor Placement:** Drag-and-drop signature field tag positioning directly inside the web document preview.
+- **Multi-party sequential eSign** — Automated dual-signer routing where the seller receives the envelope only after the buyer completes their signature
+- **County-level tax schedule integration** — Direct API calls to municipal property tax databases for automatic transfer tax and closing cost calculation
+- **Persistent PDF storage** — Store generated PDFs to Xano file storage or S3 instead of the ephemeral server filesystem
+- **Multi-template contract engine** — Support for Commercial Lease (AIR-CRE), Land Purchase, and FSBO agreement templates alongside the current Residential Purchase Agreement
+
+---
+
+## License
+
+MIT — built for the **DevNetwork [API + Cloud + AI] Hackathon 2026**.
+
+---
+
+<div align="center">
+  <strong>AI Drafts. Humans Authorize. Deal Closed.</strong><br/>
+  <a href="https://deal-close-plum.vercel.app">deal-close-plum.vercel.app</a>
+</div>
