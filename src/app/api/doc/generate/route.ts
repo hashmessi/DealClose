@@ -170,17 +170,23 @@ export async function POST(request: Request) {
 
     // 2. Save PDF bytes and write to public/documents
     const pdfBytes = await pdfDoc.save();
+    const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+    const pdfDataUri = `data:application/pdf;base64,${pdfBase64}`;
 
-    const publicDocsDir = path.join(process.cwd(), "public", "documents");
-    if (!fs.existsSync(publicDocsDir)) {
-      fs.mkdirSync(publicDocsDir, { recursive: true });
+    let relativePdfUrl = `/documents/offer_${sanitizedDealId}.pdf`;
+    try {
+      const publicDocsDir = path.join(process.cwd(), "public", "documents");
+      if (!fs.existsSync(publicDocsDir)) {
+        fs.mkdirSync(publicDocsDir, { recursive: true });
+      }
+      const fileName = `offer_${sanitizedDealId}.pdf`;
+      const filePath = path.join(publicDocsDir, fileName);
+      fs.writeFileSync(filePath, pdfBytes);
+      relativePdfUrl = `/documents/${fileName}`;
+    } catch (fsErr: any) {
+      console.warn("Serverless local disk write skipped:", fsErr.message);
+      relativePdfUrl = pdfDataUri;
     }
-
-    const fileName = `offer_${sanitizedDealId}.pdf`;
-    const filePath = path.join(publicDocsDir, fileName);
-    fs.writeFileSync(filePath, pdfBytes);
-
-    const relativePdfUrl = `/documents/${fileName}`;
 
     // 3. Update Xano deal state
     const xanoApiUrl = process.env.XANO_API_URL;
@@ -191,7 +197,7 @@ export async function POST(request: Request) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             status: "draft_complete",
-            doc_url: relativePdfUrl,
+            doc_url: relativePdfUrl.startsWith("data:") ? `/documents/offer_${sanitizedDealId}.pdf` : relativePdfUrl,
           }),
         });
       } catch (xanoErr: any) {
@@ -202,6 +208,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       pdfUrl: relativePdfUrl,
+      pdfDataUri,
       dealId: sanitizedDealId,
       status: "draft_complete",
     });
