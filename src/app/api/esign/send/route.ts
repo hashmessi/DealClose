@@ -51,8 +51,8 @@ export async function POST(request: Request) {
             fileNames: ["DealClose_Purchase_Offer.pdf"],
             parties: [
               {
-                partyEmail: buyerEmail,
-                partyName: signerName || "Authorized Buyer",
+                partyEmail: cleanEmail,
+                partyName: cleanSignerName,
                 permission: "FILL_FIELDS_AND_SIGN",
               },
             ],
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
             title: `DealClose Purchase Offer - ${address || "Real Estate Agreement"}`,
             signers: [
               {
-                email: buyerEmail,
-                name: signerName || "Authorized Buyer",
+                email: cleanEmail,
+                name: cleanSignerName,
                 role: "Buyer",
               },
             ],
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           status: "signature_sent",
           esign_envelope_id: envelopeId,
-          esign_signer_email: buyerEmail,
+          esign_signer_email: cleanEmail,
           esign_sent_at: sentAt,
         }),
       }).catch((xanoErr: any) => console.warn("Xano eSign patch warning:", xanoErr.message));
@@ -130,9 +130,9 @@ export async function POST(request: Request) {
       dealId,
       envelopeId,
       status: "signature_sent",
-      signerEmail: buyerEmail,
+      signerEmail: cleanEmail,
       sentAt,
-      message: `Signature request successfully dispatched to ${buyerEmail} via Foxit eSign.`,
+      message: `Signature request successfully dispatched to ${cleanEmail} via Foxit eSign.`,
     });
   } catch (error: any) {
     console.error("eSign routing error:", error);
