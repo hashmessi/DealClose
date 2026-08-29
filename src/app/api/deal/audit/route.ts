@@ -46,6 +46,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const sanitizedDealId = String(dealId).replace(/[^a-zA-Z0-9_-]/g, "");
+    const cleanAddress = address ? String(address).trim().replace(/[\r\n\t]/g, " ").slice(0, 300) : "Property";
     const timestamp = new Date().toISOString();
     const formattedLogs = (auditLogs || []).map((log: any) => ({
       ...log,
@@ -53,24 +55,23 @@ export async function POST(request: Request) {
     }));
 
     const auditRecord = {
-      dealId,
-      address: address || "Property",
+      dealId: sanitizedDealId,
+      address: cleanAddress,
       status: "human_verified",
       auditCount: formattedLogs.length,
       auditLogs: formattedLogs,
       resolvedTerms: resolvedTerms || {},
-      certificateHash: `dcl_cert_${Math.abs(dealId.split("").reduce((a: number, b: string) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(16)}`,
+      certificateHash: `dcl_cert_${Math.abs(sanitizedDealId.split("").reduce((a: number, b: string) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(16)}`,
       timestamp,
     };
 
     // Store in local vault
-    auditVault.set(String(dealId), auditRecord);
+    auditVault.set(sanitizedDealId, auditRecord);
 
-    // Update Xano deal record if URL is configured
+    // Update Xano deal record if URL is configured with timeout
     const xanoApiUrl = process.env.XANO_API_URL;
     if (xanoApiUrl && xanoApiUrl.trim() !== "") {
       try {
-        const sanitizedDealId = String(dealId).replace(/[^a-zA-Z0-9_-]/g, "");
         await fetch(`${xanoApiUrl.replace(/\/$/, "")}/deal/${sanitizedDealId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
             structured_deal_data: resolvedTerms,
             updated_at: timestamp,
           }),
+          signal: AbortSignal.timeout(6000),
         });
       } catch (xanoErr: any) {
         console.warn("Xano audit patch warning:", xanoErr.message);
@@ -98,4 +100,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

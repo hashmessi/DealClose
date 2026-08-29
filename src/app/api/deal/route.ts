@@ -19,25 +19,28 @@ export async function POST(request: Request) {
 
     let serpData: any = null;
 
-    // 1. Fetch live SerpApi data
+    // 1. Fetch live SerpApi data with strict timeout
     if (serpApiKey && serpApiKey.trim() !== "") {
       const serpUrl = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(
         cleanAddress + " property details market comps price Zillow Redfin"
       )}&api_key=${serpApiKey}`;
 
-      const serpRes = await fetch(serpUrl, { cache: "no-store" });
+      const serpRes = await fetch(serpUrl, { 
+        cache: "no-store",
+        signal: AbortSignal.timeout(12000),
+      });
       if (!serpRes.ok) {
         const errText = await serpRes.text();
         throw new Error(`SerpApi failed (${serpRes.status}): ${errText}`);
       }
       serpData = await serpRes.json();
     } else {
-      // Demo fallback when key is not configured locally yet
+      // Deterministic demo fallback when key is not configured locally yet
       serpData = {
-        search_metadata: { status: "Success (Demo Mode)", address },
+        search_metadata: { status: "Success (Demo Mode)", address: cleanAddress },
         organic_results: [
           {
-            title: `${address} - Property Profile & Comps`,
+            title: `${cleanAddress} - Property Profile & Comps`,
             snippet: `Estimated Value: $785,000. 3 Beds, 2.5 Baths, 2,150 sqft. Comparable properties in radius: $760,000 - $810,000.`,
             link: "https://zillow.com/homedetails/demo",
           },
@@ -48,7 +51,7 @@ export async function POST(request: Request) {
           },
         ],
         knowledge_graph: {
-          title: address,
+          title: cleanAddress,
           type: "Single Family Residential",
           estimated_value: "$785,000",
           year_built: 2018,
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
       };
     }
 
-    // 2. Persist deal record in Xano backend
+    // 2. Persist deal record in Xano backend (timeout protected)
     let dealRecord: any = null;
     if (xanoApiUrl && xanoApiUrl.trim() !== "") {
       try {
@@ -65,11 +68,12 @@ export async function POST(request: Request) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            property_address: address,
+            property_address: cleanAddress,
             status: "research_complete",
             raw_serpapi_data: serpData,
             user_id: 1, // Pre-seeded demo account ID
           }),
+          signal: AbortSignal.timeout(6000),
         });
 
         if (xanoRes.ok) {

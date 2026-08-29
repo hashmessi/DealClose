@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const { dealId, dealTerms, address } = body;
 
     const sanitizedDealId = dealId ? String(dealId).replace(/[^a-zA-Z0-9_-]/g, "") : `deal_${Date.now()}`;
-    const targetAddress = address || "742 Evergreen Terrace, Springfield, OR";
+    const targetAddress = address ? String(address).trim().replace(/[\r\n\t]/g, " ").slice(0, 300) : "742 Evergreen Terrace, Springfield, OR";
     
     const rawTerms = dealTerms || {};
     const terms = {
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
     yPos -= 30;
     page.drawLine({ start: { x: 40, y: yPos }, end: { x: width - 40, y: yPos }, thickness: 1, color: borderSlate });
 
-    // Section 3: Signature Blocks (Ready for Foxit eSign handoff in Phase 3)
+    // Section 3: Signature Blocks
     yPos -= 25;
     page.drawText("3. AUTHORIZATION & SIGNATURE QUEUE", { x: 40, y: yPos, size: 12, font: fontBold, color: darkText });
 
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
       relativePdfUrl = pdfDataUri;
     }
 
-    // 3. Update Xano deal state
+    // 3. Update Xano deal state with timeout protection
     const xanoApiUrl = process.env.XANO_API_URL;
     if (xanoApiUrl && xanoApiUrl.trim() !== "") {
       try {
@@ -199,6 +199,7 @@ export async function POST(request: Request) {
             status: "draft_complete",
             doc_url: relativePdfUrl.startsWith("data:") ? `/documents/offer_${sanitizedDealId}.pdf` : relativePdfUrl,
           }),
+          signal: AbortSignal.timeout(6000),
         });
       } catch (xanoErr: any) {
         console.warn("Xano patch doc url error:", xanoErr.message);

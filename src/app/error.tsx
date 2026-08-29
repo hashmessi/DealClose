@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function GlobalError({
   error,
@@ -17,16 +18,12 @@ export default function GlobalError({
     <html lang="en">
       <head>
         <title>Error — DealClose</title>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Inter:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body
         style={{
-          background: "#e5e5e5",
-          color: "#000",
-          fontFamily: "'Inter', sans-serif",
+          background: "var(--color-warm-canvas, #e5e5e5)",
+          color: "var(--color-carbon-black, #000)",
+          fontFamily: "var(--font-body, 'Inter', sans-serif)",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -36,15 +33,15 @@ export default function GlobalError({
           margin: 0,
         }}
       >
-        <div style={{ maxWidth: 560, textAlign: "center" }}>
+        <div style={{ maxWidth: 580, textAlign: "center" }}>
           <span
             style={{
-              background: "#d1ffca",
-              color: "#000",
-              borderRadius: 64,
+              background: "var(--color-mint-chip, #d1ffca)",
+              color: "var(--color-carbon-black, #000)",
+              borderRadius: "var(--radius-tag, 64px)",
               padding: "4px 14px",
               fontSize: 11,
-              fontFamily: "monospace",
+              fontFamily: "var(--font-mono, monospace)",
               fontWeight: 700,
               letterSpacing: "-0.3px",
               textTransform: "uppercase" as const,
@@ -56,13 +53,11 @@ export default function GlobalError({
           </span>
 
           <h1
+            className="dc-display"
             style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 700,
-              fontSize: "clamp(64px, 12vw, 96px)",
+              fontSize: "clamp(56px, 10vw, 88px)",
               lineHeight: 0.9,
               letterSpacing: "-0.03em",
-              textTransform: "uppercase" as const,
               marginBottom: 24,
             }}
           >
@@ -71,22 +66,23 @@ export default function GlobalError({
             WENT WRONG
           </h1>
 
-          <p style={{ fontSize: 16, color: "#444", lineHeight: 1.5, marginBottom: 32 }}>
-            The Trust Pipeline encountered an unexpected error. Your data has not been submitted.
+          <p style={{ fontSize: 16, color: "var(--color-slate, #444)", lineHeight: 1.55, marginBottom: 32 }}>
+            The Trust Pipeline encountered an unexpected error. Your transaction data has not been compromised.
           </p>
 
           {error.message && (
             <p
               style={{
-                fontFamily: "monospace",
+                fontFamily: "var(--font-mono, monospace)",
                 fontSize: 12,
-                color: "#979797",
-                background: "#fff",
+                color: "var(--color-smoke, #979797)",
+                background: "var(--color-paper-white, #fff)",
                 borderRadius: 8,
                 padding: "12px 16px",
                 marginBottom: 32,
                 textAlign: "left",
                 wordBreak: "break-word" as const,
+                border: "1px solid var(--color-ash, #c6c6c6)",
               }}
             >
               {error.message}
@@ -94,35 +90,37 @@ export default function GlobalError({
             </p>
           )}
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <button
               onClick={reset}
+              className="dc-btn-press"
               style={{
-                background: "#000",
+                background: "var(--color-carbon-black, #000)",
                 color: "#fff",
                 border: "none",
-                borderRadius: 6,
+                borderRadius: "var(--radius-btn, 6px)",
                 padding: "14px 32px",
                 fontSize: 15,
                 fontWeight: 500,
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "var(--font-body, 'Inter', sans-serif)",
                 letterSpacing: "-0.02em",
                 cursor: "pointer",
               }}
             >
               Try Again
             </button>
-            <a
+            <Link
               href="/"
+              className="dc-btn-press"
               style={{
                 background: "transparent",
-                color: "#444",
-                border: "1.5px solid #444",
-                borderRadius: 6,
+                color: "var(--color-slate, #444)",
+                border: "1.5px solid var(--color-slate, #444)",
+                borderRadius: "var(--radius-btn, 6px)",
                 padding: "14px 32px",
                 fontSize: 15,
                 fontWeight: 500,
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "var(--font-body, 'Inter', sans-serif)",
                 letterSpacing: "-0.02em",
                 cursor: "pointer",
                 textDecoration: "none",
@@ -131,7 +129,7 @@ export default function GlobalError({
               }}
             >
               Return Home
-            </a>
+            </Link>
           </div>
         </div>
       </body>

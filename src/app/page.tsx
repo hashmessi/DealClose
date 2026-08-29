@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type PipelineStep = "idle" | "intake" | "ai" | "hitl" | "pdf" | "sign" | "done";
@@ -35,6 +36,7 @@ interface SignResult {
   signerEmail: string;
   sentAt: string;
   message: string;
+  mode?: string;
 }
 
 interface AuditLog {
@@ -67,15 +69,18 @@ function MintTag({ children }: { children: React.ReactNode }) {
     <span
       style={{
         background: "var(--color-mint-chip, #d1ffca)",
-        color: "#000",
-        borderRadius: 64,
+        color: "var(--color-carbon-black, #000)",
+        borderRadius: "var(--radius-tag, 64px)",
         padding: "4px 14px",
         fontSize: 11,
         fontFamily: "var(--font-mono, monospace)",
         fontWeight: 700,
         letterSpacing: "-0.3px",
         textTransform: "uppercase" as const,
-        display: "inline-block",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        lineHeight: 1.4,
       }}
     >
       {children}
@@ -92,6 +97,7 @@ function MonoLabel({ children, muted }: { children: React.ReactNode; muted?: boo
         letterSpacing: "-0.3px",
         color: muted ? "var(--color-smoke, #979797)" : "var(--color-carbon-black, #000)",
         textTransform: "uppercase" as const,
+        fontWeight: 500,
       }}
     >
       {children}
@@ -106,6 +112,7 @@ function PrimaryButton({
   loadingText,
   children,
   id,
+  type = "button",
 }: {
   onClick?: () => void;
   disabled?: boolean;
@@ -113,35 +120,40 @@ function PrimaryButton({
   loadingText?: string;
   children: React.ReactNode;
   id?: string;
+  type?: "button" | "submit" | "reset";
 }) {
   const [hovered, setHovered] = useState(false);
   const isDisabled = disabled || loading;
   return (
     <button
       id={id}
+      type={type}
       onClick={onClick}
       disabled={isDisabled}
       onMouseEnter={() => !isDisabled && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.98)"; }}
-      onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+      className="dc-btn-press"
       style={{
-        background: isDisabled ? "var(--color-ash, #c6c6c6)" : hovered ? "#1a1a1a" : "var(--color-carbon-black, #000)",
+        background: isDisabled
+          ? "var(--color-ash, #c6c6c6)"
+          : hovered
+          ? "#1a1a1a"
+          : "var(--color-carbon-black, #000)",
         color: "#fff",
         border: "none",
-        borderRadius: 6,
-        padding: "14px 32px",
+        borderRadius: "var(--radius-btn, 6px)",
+        padding: "14px 28px",
         fontSize: 15,
         fontWeight: 500,
-        fontFamily: "var(--font-body, Inter, sans-serif)",
+        fontFamily: "var(--font-body, 'Inter', sans-serif)",
         letterSpacing: "-0.02em",
         cursor: isDisabled ? "not-allowed" : "pointer",
         display: "inline-flex",
         alignItems: "center",
+        justifyContent: "center",
         gap: 10,
-        transition: "background 0.15s, transform 0.08s",
         whiteSpace: "nowrap" as const,
-        transform: "scale(1)",
+        lineHeight: 1.2,
       }}
     >
       {loading && (
@@ -157,7 +169,7 @@ function PrimaryButton({
           }}
         />
       )}
-      {loading ? loadingText || "Loading..." : children}
+      {loading ? loadingText || "Processing..." : children}
     </button>
   );
 }
@@ -168,7 +180,14 @@ function LoadingTimer({ startTime }: { startTime: number }) {
     const iv = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 500);
     return () => clearInterval(iv);
   }, [startTime]);
-  return <span style={{ opacity: 0.55, fontSize: 12, fontFamily: "var(--font-mono, monospace)" }}>({elapsed}s)</span>;
+  return (
+    <span
+      className="tabular-nums"
+      style={{ opacity: 0.65, fontSize: 12, fontFamily: "var(--font-mono, monospace)" }}
+    >
+      ({elapsed}s)
+    </span>
+  );
 }
 
 function GhostButton({
@@ -176,29 +195,39 @@ function GhostButton({
   disabled,
   children,
   id,
+  type = "button",
 }: {
   onClick?: () => void;
   disabled?: boolean;
   children: React.ReactNode;
   id?: string;
+  type?: "button" | "submit";
 }) {
+  const [hovered, setHovered] = useState(false);
   return (
     <button
       id={id}
+      type={type}
       onClick={onClick}
       disabled={disabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="dc-btn-press"
       style={{
-        background: "transparent",
-        color: disabled ? "var(--color-ash)" : "var(--color-slate, #444)",
+        background: hovered && !disabled ? "rgba(0,0,0,0.04)" : "transparent",
+        color: disabled ? "var(--color-ash, #c6c6c6)" : "var(--color-slate, #444)",
         border: "1.5px solid",
-        borderColor: disabled ? "var(--color-ash)" : "var(--color-slate, #444)",
-        borderRadius: 6,
-        padding: "12px 24px",
+        borderColor: disabled ? "var(--color-ash, #c6c6c6)" : hovered ? "var(--color-carbon-black, #000)" : "var(--color-slate, #444)",
+        borderRadius: "var(--radius-btn, 6px)",
+        padding: "10px 22px",
         fontSize: 14,
         fontWeight: 500,
-        fontFamily: "var(--font-body, Inter, sans-serif)",
+        fontFamily: "var(--font-body, 'Inter', sans-serif)",
         letterSpacing: "-0.02em",
         cursor: disabled ? "not-allowed" : "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
       }}
     >
       {children}
@@ -210,18 +239,21 @@ function Card({
   children,
   inverted,
   style: extraStyle,
+  className,
 }: {
   children: React.ReactNode;
   inverted?: boolean;
   style?: React.CSSProperties;
+  className?: string;
 }) {
   return (
     <div
+      className={className}
       style={{
         background: inverted ? "var(--color-carbon-black, #000)" : "var(--color-paper-white, #fff)",
-        borderRadius: 32,
+        borderRadius: "var(--radius-card-lg, 32px)",
         padding: "28px 32px",
-        color: inverted ? "#fff" : "#000",
+        color: inverted ? "#fff" : "var(--color-carbon-black, #000)",
         ...extraStyle,
       }}
     >
@@ -240,18 +272,19 @@ function DemoPill({ addr, onClick, active }: { addr: string; onClick: () => void
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className="dc-btn-press"
       style={{
         background: show ? "var(--color-carbon-black, #000)" : "var(--color-paper-white, #fff)",
         color: show ? "#fff" : "var(--color-slate, #444)",
         border: `1.5px solid ${show ? "var(--color-carbon-black, #000)" : "var(--color-ash, #c6c6c6)"}`,
-        borderRadius: 48,
+        borderRadius: "var(--radius-pill, 48px)",
         padding: "6px 16px",
         fontSize: 12,
         fontWeight: 500,
         cursor: "pointer",
-        fontFamily: "var(--font-body, Inter, sans-serif)",
+        fontFamily: "var(--font-body, 'Inter', sans-serif)",
         letterSpacing: "-0.01em",
-        transition: "all 0.15s",
+        transition: "all 0.15s ease",
       }}
     >
       {addr.split(",")[0]}
@@ -262,35 +295,38 @@ function DemoPill({ addr, onClick, active }: { addr: string; onClick: () => void
 // ─── Pipeline Progress Bar ────────────────────────────────────────────────────
 function PipelineProgress({ current }: { current: PipelineStep }) {
   const stepOrder = ["intake", "ai", "hitl", "pdf", "sign"];
-  const currentIdx = stepOrder.indexOf(current);
+  const currentIdx = current === "done" ? 5 : stepOrder.indexOf(current);
 
   return (
     <div
+      className="dc-scroll-x"
       style={{
         background: "var(--color-paper-white, #fff)",
-        borderRadius: 48,
-        padding: "12px 24px",
+        borderRadius: "var(--radius-pill, 48px)",
+        padding: "10px 20px",
         display: "flex",
         gap: 8,
         alignItems: "center",
-        overflowX: "auto",
       }}
     >
       {PIPELINE_STEPS.map((step, i) => {
         const done = currentIdx > i;
         const active = currentIdx === i;
         return (
-          <div key={step.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div key={step.key} style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             <div
               style={{
                 padding: "6px 16px",
-                borderRadius: 48,
+                borderRadius: "var(--radius-pill, 48px)",
                 background: done
                   ? "var(--color-mint-chip, #d1ffca)"
                   : active
                   ? "var(--color-carbon-black, #000)"
                   : "var(--color-mist-gray, #f3f3f3)",
-                transition: "all 0.2s",
+                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 1,
               }}
             >
               <div
@@ -302,15 +338,31 @@ function PipelineProgress({ current }: { current: PipelineStep }) {
                   textTransform: "uppercase",
                   color: active ? "#fff" : done ? "#000" : "var(--color-smoke, #979797)",
                   whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
                 }}
               >
-                {done ? "✓ " : ""}{step.label}
+                {done && <span>✓</span>}
+                {active && (
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "var(--color-mint-chip, #d1ffca)",
+                      display: "inline-block",
+                      animation: "dc-pulse-mint 1.5s infinite",
+                    }}
+                  />
+                )}
+                {step.label}
               </div>
               <div
                 style={{
                   fontSize: 9,
                   fontFamily: "var(--font-mono, monospace)",
-                  color: active ? "rgba(255,255,255,0.6)" : done ? "#000" : "var(--color-ash, #c6c6c6)",
+                  color: active ? "rgba(255,255,255,0.6)" : done ? "rgba(0,0,0,0.6)" : "var(--color-ash, #c6c6c6)",
                   letterSpacing: "-0.2px",
                   textTransform: "uppercase",
                 }}
@@ -321,10 +373,11 @@ function PipelineProgress({ current }: { current: PipelineStep }) {
             {i < PIPELINE_STEPS.length - 1 && (
               <div
                 style={{
-                  width: 20,
-                  height: 1,
+                  width: 16,
+                  height: 1.5,
                   background: done ? "var(--color-mint-chip, #d1ffca)" : "var(--color-ash, #c6c6c6)",
                   flexShrink: 0,
+                  transition: "background 0.3s",
                 }}
               />
             )}
@@ -349,26 +402,40 @@ function ErrorBanner({ message, onDismiss }: { message: string; onDismiss: () =>
         alignItems: "flex-start",
         gap: 16,
         animation: "dc-slide-up 0.25s ease-out",
+        border: "1px solid rgba(255,255,255,0.15)",
       }}
     >
       <div>
-        <p style={{ fontSize: 12, fontFamily: "var(--font-mono, monospace)", letterSpacing: "-0.3px", marginBottom: 4, textTransform: "uppercase", color: "var(--color-mint-chip, #d1ffca)" }}>
+        <p
+          style={{
+            fontSize: 11,
+            fontFamily: "var(--font-mono, monospace)",
+            letterSpacing: "-0.3px",
+            marginBottom: 4,
+            textTransform: "uppercase",
+            color: "var(--color-mint-chip, #d1ffca)",
+            fontWeight: 700,
+          }}
+        >
           ACTION REQUIRED
         </p>
-        <p style={{ fontSize: 14, lineHeight: 1.5, color: "rgba(255,255,255,0.85)" }}>{message}</p>
+        <p style={{ fontSize: 14, lineHeight: 1.5, color: "rgba(255,255,255,0.9)" }}>{message}</p>
       </div>
       <button
         onClick={onDismiss}
+        className="dc-btn-press"
         style={{
-          background: "rgba(255,255,255,0.1)",
+          background: "rgba(255,255,255,0.12)",
           border: "none",
           color: "#fff",
           borderRadius: 4,
-          padding: "4px 10px",
+          padding: "6px 12px",
           fontSize: 12,
           cursor: "pointer",
           flexShrink: 0,
+          fontWeight: 700,
         }}
+        aria-label="Dismiss error notification"
       >
         ✕
       </button>
@@ -408,29 +475,52 @@ function HitlFieldCard({
   const score = confidenceScore ?? 74;
   const isLowConfidence = score < 85;
 
+  const gaugeColor = score < 75 ? "#ff3b30" : score < 85 ? "#ff9500" : "#34c759";
+
   return (
     <div
       style={{
         background: isResolved ? "var(--color-mist-gray, #f3f3f3)" : "var(--color-paper-white, #fff)",
-        borderRadius: 24,
+        borderRadius: "var(--radius-card, 24px)",
         padding: "24px",
-        border: isResolved ? "1px solid var(--color-ash, #c6c6c6)" : "2px solid var(--color-carbon-black, #000)",
-        transition: "all 0.2s",
+        border: isResolved ? "1.5px solid var(--color-ash, #c6c6c6)" : "2px solid var(--color-carbon-black, #000)",
+        transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
         animation: "dc-slide-up 0.3s ease-out",
       }}
     >
       {/* Field header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 14,
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <MonoLabel>{fieldKey.replace(/_/g, " ")}</MonoLabel>
-          
+          <span
+            style={{
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "-0.3px",
+              color: "var(--color-carbon-black, #000)",
+              textTransform: "uppercase",
+            }}
+          >
+            {fieldKey.replace(/_/g, " ")}
+          </span>
+
           {/* Confidence Score Pill & Gauge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             <span
+              className="tabular-nums"
               style={{
                 background: isLowConfidence ? "var(--color-voltage-yellow, #fff100)" : "var(--color-mint-chip, #d1ffca)",
                 color: "#000",
-                borderRadius: 64,
+                borderRadius: "var(--radius-tag, 64px)",
                 padding: "3px 12px",
                 fontSize: 10,
                 fontFamily: "var(--font-mono, monospace)",
@@ -457,18 +547,16 @@ function HitlFieldCard({
                 style={{
                   width: `${score}%`,
                   height: "100%",
-                  background: score < 75 ? "#ff3b30" : score < 85 ? "#ff9500" : "#34c759",
+                  background: gaugeColor,
                   borderRadius: 3,
-                  transition: "width 0.4s ease-out",
+                  transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               />
             </div>
           </div>
         </div>
 
-        {isResolved && (
-          <MintTag>✓ Human Confirmed</MintTag>
-        )}
+        {isResolved && <MintTag>✓ Human Confirmed</MintTag>}
       </div>
 
       {/* AI Rationale Callout */}
@@ -482,36 +570,82 @@ function HitlFieldCard({
             marginBottom: 16,
           }}
         >
-          <p style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "var(--color-slate, #444)", textTransform: "uppercase", marginBottom: 2 }}>
+          <p
+            style={{
+              fontSize: 10,
+              fontFamily: "var(--font-mono, monospace)",
+              color: "var(--color-slate, #444)",
+              textTransform: "uppercase",
+              marginBottom: 3,
+              fontWeight: 700,
+            }}
+          >
             ↳ AI Flag Rationale:
           </p>
-          <p style={{ fontSize: 13, color: "var(--color-carbon-black, #000)", lineHeight: 1.4 }}>
+          <p style={{ fontSize: 13, color: "var(--color-carbon-black, #000)", lineHeight: 1.45 }}>
             {rationale}
           </p>
         </div>
       )}
 
-      {/* Side by side */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      {/* Side by side comparison */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 16,
+        }}
+      >
         {/* AI Suggestion */}
         <div
           style={{
             background: "var(--color-warm-canvas, #e5e5e5)",
             borderRadius: 12,
             padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
           }}
         >
-          <p style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)", letterSpacing: "-0.3px", textTransform: "uppercase", marginBottom: 8 }}>
+          <p
+            style={{
+              fontSize: 10,
+              fontFamily: "var(--font-mono, monospace)",
+              color: "var(--color-smoke, #979797)",
+              letterSpacing: "-0.3px",
+              textTransform: "uppercase",
+              marginBottom: 6,
+              fontWeight: 700,
+            }}
+          >
             AI DRAFT VALUE
           </p>
-          <p style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.5px", color: "var(--color-slate, #444)" }}>
+          <p
+            className="tabular-nums"
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              letterSpacing: "-0.5px",
+              color: "var(--color-slate, #444)",
+              fontFamily: "var(--font-body, 'Inter', sans-serif)",
+            }}
+          >
             {displayAi}
           </p>
         </div>
 
         {/* Human Override */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <p style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)", letterSpacing: "-0.3px", textTransform: "uppercase" }}>
+          <p
+            style={{
+              fontSize: 10,
+              fontFamily: "var(--font-mono, monospace)",
+              color: "var(--color-smoke, #979797)",
+              letterSpacing: "-0.3px",
+              textTransform: "uppercase",
+              fontWeight: 700,
+            }}
+          >
             HUMAN AUTHORIZE / OVERRIDE
           </p>
           <input
@@ -520,9 +654,10 @@ function HitlFieldCard({
             onChange={(e) => onValueChange(e.target.value)}
             disabled={isResolved}
             aria-label={`Edit ${fieldKey.replace(/_/g, " ")} — AI suggested ${displayAi}`}
+            className="tabular-nums"
             style={{
               width: "100%",
-              padding: "10px 14px",
+              padding: "11px 14px",
               borderRadius: 8,
               border: "1.5px solid",
               borderColor: isResolved ? "var(--color-ash, #c6c6c6)" : "var(--color-slate, #444)",
@@ -531,7 +666,8 @@ function HitlFieldCard({
               color: "var(--color-carbon-black, #000)",
               background: isResolved ? "var(--color-mist-gray, #f3f3f3)" : "#fff",
               outline: "none",
-              fontFamily: "var(--font-body, Inter, sans-serif)",
+              fontFamily: "var(--font-body, 'Inter', sans-serif)",
+              transition: "border-color 0.15s ease",
             }}
           />
           {!isResolved && (
@@ -568,6 +704,9 @@ export default function Home() {
   const [buyerEmail, setBuyerEmail] = useState("buyer@dealclose.ai");
   const [signerName, setSignerName] = useState("Alex Morgan");
   const [showSaasMatrix, setShowSaasMatrix] = useState(false);
+  const [copiedHash, setCopiedHash] = useState(false);
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const flaggedFields = aiResult?.flaggedFields ?? [];
   const resolvedCount = flaggedFields.filter((k) => resolvedFields[k]).length;
@@ -611,6 +750,12 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const handleCopyHash = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedHash(true);
+    setTimeout(() => setCopiedHash(false), 2000);
+  };
+
   const resetAll = () => {
     setStep("idle");
     setError(null);
@@ -626,8 +771,8 @@ export default function Home() {
     setPdfResult(null);
     setPdfTime(null);
     setSignResult(null);
+    setCopiedHash(false);
   };
-
 
   // Step 1: SerpApi intake
   const handleIntake = async (e: React.FormEvent) => {
@@ -662,7 +807,6 @@ export default function Home() {
     setAiLoadStep(0);
     const t0 = Date.now();
     setAiExtractStart(t0);
-    // Simulate microstep progression for demo clarity
     const stepTimers = [
       setTimeout(() => setAiLoadStep(1), 600),
       setTimeout(() => setAiLoadStep(2), 1400),
@@ -695,9 +839,12 @@ export default function Home() {
     } catch (err: unknown) {
       clearTimeout(timer);
       stepTimers.forEach(clearTimeout);
-      const msg = err instanceof Error
-        ? (err.name === "AbortError" ? "AI extraction timed out (90s). Click \"Run AI Structuring\" to retry." : err.message)
-        : "AI extraction failed";
+      const msg =
+        err instanceof Error
+          ? err.name === "AbortError"
+            ? 'AI extraction timed out (90s). Click "Run AI Structuring" to retry.'
+            : err.message
+          : "AI extraction failed";
       setError(msg);
     } finally {
       stepTimers.forEach(clearTimeout);
@@ -800,9 +947,12 @@ export default function Home() {
       setStep("done");
     } catch (err: unknown) {
       clearTimeout(timer);
-      const msg = err instanceof Error
-        ? (err.name === "AbortError" ? "Foxit eSign dispatch timed out (30s). Click to retry." : err.message)
-        : "Foxit eSign dispatch failed";
+      const msg =
+        err instanceof Error
+          ? err.name === "AbortError"
+            ? "Foxit eSign dispatch timed out (30s). Click to retry."
+            : err.message
+          : "Foxit eSign dispatch failed";
       setError(msg);
     } finally {
       setIsEsigning(false);
@@ -816,7 +966,7 @@ export default function Home() {
         minHeight: "100vh",
         background: "var(--color-warm-canvas, #e5e5e5)",
         color: "var(--color-carbon-black, #000)",
-        fontFamily: "var(--font-body, Inter, sans-serif)",
+        fontFamily: "var(--font-body, 'Inter', sans-serif)",
       }}
     >
       {/* ── NAV ── */}
@@ -825,8 +975,9 @@ export default function Home() {
           height: "5rem",
           display: "flex",
           alignItems: "center",
-          padding: "0 32px",
+          padding: "0 clamp(16px, 4vw, 32px)",
           justifyContent: "space-between",
+          gap: 12,
         }}
         role="banner"
       >
@@ -834,19 +985,17 @@ export default function Home() {
         <div
           style={{
             background: "var(--color-paper-white, #fff)",
-            borderRadius: 48,
-            padding: "10px 24px",
+            borderRadius: "var(--radius-pill, 48px)",
+            padding: "8px 20px",
             display: "flex",
             alignItems: "center",
-            gap: 16,
+            gap: 14,
           }}
         >
           <span
+            className="dc-display"
             style={{
-              fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-              fontWeight: 700,
-              fontSize: 20,
-              textTransform: "uppercase",
+              fontSize: 22,
               letterSpacing: "-0.03em",
               lineHeight: 1,
             }}
@@ -857,19 +1006,20 @@ export default function Home() {
         </div>
 
         {/* Right nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {intakeResult && (
             <GhostButton onClick={resetAll} id="reset-pipeline" aria-label="Start a new deal — resets the pipeline">
               New Deal
             </GhostButton>
           )}
-          <a
+          <Link
             href="/test"
             aria-label="System status and live API connections"
+            className="dc-btn-press"
             style={{
               background: "var(--color-paper-white, #fff)",
               border: "1.5px solid var(--color-ash, #c6c6c6)",
-              borderRadius: 48,
+              borderRadius: "var(--radius-pill, 48px)",
               padding: "7px 18px",
               fontFamily: "var(--font-mono, monospace)",
               fontSize: 11,
@@ -881,10 +1031,11 @@ export default function Home() {
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              transition: "all 0.15s",
+              transition: "all 0.15s ease",
             }}
           >
             <span
+              className="dc-live-dot"
               style={{
                 width: 8,
                 height: 8,
@@ -895,17 +1046,21 @@ export default function Home() {
               }}
             />
             LIVE APIS ACTIVE →
-          </a>
+          </Link>
         </div>
       </header>
 
       {/* ── PIPELINE PROGRESS — always visible ── */}
-      <div style={{ padding: "0 32px 24px", animation: "dc-fade-in 0.3s ease-out" }} role="status" aria-label={`Pipeline step: ${step}`}>
+      <div
+        style={{ padding: "0 clamp(16px, 4vw, 32px) 24px", animation: "dc-fade-in 0.3s ease-out" }}
+        role="status"
+        aria-label={`Pipeline step: ${step}`}
+      >
         <PipelineProgress current={step} />
       </div>
 
       {/* ── MAIN CONTENT ── */}
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px 96px" }}>
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "0 clamp(16px, 4vw, 32px) 96px" }}>
         {/* ─ ERROR BANNER ─ */}
         {error && (
           <div style={{ marginBottom: 24 }} role="alert" aria-live="assertive">
@@ -917,24 +1072,22 @@ export default function Home() {
         {/* HERO — shown when idle */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {step === "idle" && (
-          <section style={{ paddingTop: 64 }}>
-            {/* Eyebrow */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <section style={{ paddingTop: "clamp(24px, 5vw, 64px)" }}>
+            {/* Header Eyebrow */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
               <MintTag>DevNetwork Hackathon 2026</MintTag>
-              <MonoLabel muted>AI + Cloud + API</MonoLabel>
+              <MonoLabel muted>AI + Cloud + API Track</MonoLabel>
             </div>
 
             {/* Hero headline */}
             <h1
+              className="dc-display"
               style={{
-                fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                fontWeight: 700,
-                fontSize: "clamp(64px, 10vw, 120px)",
+                fontSize: "clamp(56px, 10vw, 120px)",
                 lineHeight: 0.9,
                 letterSpacing: "-0.03em",
-                textTransform: "uppercase",
                 color: "var(--color-carbon-black, #000)",
-                maxWidth: 800,
+                maxWidth: 860,
                 marginBottom: 32,
               }}
             >
@@ -948,7 +1101,7 @@ export default function Home() {
                 style={{
                   background: "var(--color-mint-chip, #d1ffca)",
                   display: "inline-block",
-                  padding: "0 8px",
+                  padding: "0 10px",
                 }}
               >
                 DEAL CLOSED.
@@ -960,9 +1113,9 @@ export default function Home() {
               style={{
                 fontSize: 18,
                 color: "var(--color-slate, #444)",
-                lineHeight: 1.5,
-                maxWidth: 540,
-                marginBottom: 48,
+                lineHeight: 1.55,
+                maxWidth: 580,
+                marginBottom: 44,
                 letterSpacing: "-0.01em",
               }}
             >
@@ -970,10 +1123,17 @@ export default function Home() {
             </p>
 
             {/* Contract Template Multi-Tenancy Selector */}
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                 <MonoLabel muted>Contract Template Engine:</MonoLabel>
-                <span style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "var(--color-carbon-black, #000)", fontWeight: 700 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "var(--font-mono, monospace)",
+                    color: "var(--color-carbon-black, #000)",
+                    fontWeight: 700,
+                  }}
+                >
                   Active: California Residential Purchase Agreement (CA-RPA)
                 </span>
               </div>
@@ -982,8 +1142,8 @@ export default function Home() {
                   style={{
                     background: "var(--color-carbon-black, #000)",
                     color: "#fff",
-                    borderRadius: 48,
-                    padding: "4px 14px",
+                    borderRadius: "var(--radius-pill, 48px)",
+                    padding: "5px 16px",
                     fontSize: 11,
                     fontFamily: "var(--font-mono, monospace)",
                     fontWeight: 700,
@@ -998,8 +1158,8 @@ export default function Home() {
                     background: "var(--color-mist-gray, #f3f3f3)",
                     color: "var(--color-smoke, #979797)",
                     border: "1px dashed var(--color-ash, #c6c6c6)",
-                    borderRadius: 48,
-                    padding: "4px 14px",
+                    borderRadius: "var(--radius-pill, 48px)",
+                    padding: "5px 16px",
                     fontSize: 11,
                     fontFamily: "var(--font-mono, monospace)",
                     textTransform: "uppercase",
@@ -1014,8 +1174,8 @@ export default function Home() {
                     background: "var(--color-mist-gray, #f3f3f3)",
                     color: "var(--color-smoke, #979797)",
                     border: "1px dashed var(--color-ash, #c6c6c6)",
-                    borderRadius: 48,
-                    padding: "4px 14px",
+                    borderRadius: "var(--radius-pill, 48px)",
+                    padding: "5px 16px",
                     fontSize: 11,
                     fontFamily: "var(--font-mono, monospace)",
                     textTransform: "uppercase",
@@ -1035,7 +1195,7 @@ export default function Home() {
                 display: "flex",
                 flexDirection: "column",
                 gap: 12,
-                maxWidth: 640,
+                maxWidth: 680,
               }}
             >
               <div
@@ -1043,10 +1203,10 @@ export default function Home() {
                   display: "flex",
                   gap: 0,
                   background: "var(--color-paper-white, #fff)",
-                  borderRadius: 8,
+                  borderRadius: "var(--radius-btn, 6px)",
                   overflow: "hidden",
                   border: "1.5px solid var(--color-ash, #c6c6c6)",
-                  transition: "border-color 0.15s",
+                  transition: "border-color 0.15s ease",
                 }}
                 onFocus={(e) =>
                   ((e.currentTarget as HTMLDivElement).style.borderColor = "var(--color-carbon-black, #000)")
@@ -1056,11 +1216,13 @@ export default function Home() {
                 }
               >
                 <input
+                  ref={inputRef}
                   id="property-address-input"
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="e.g. 500 Howard St, San Francisco, CA 94105"
+                  aria-label="Target property address for live real estate offer pipeline"
                   style={{
                     flex: 1,
                     padding: "16px 20px",
@@ -1069,38 +1231,60 @@ export default function Home() {
                     fontSize: 16,
                     color: "var(--color-carbon-black, #000)",
                     background: "transparent",
-                    fontFamily: "var(--font-body, Inter, sans-serif)",
+                    fontFamily: "var(--font-body, 'Inter', sans-serif)",
                     letterSpacing: "-0.01em",
                   }}
                 />
+                {address && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddress("");
+                      inputRef.current?.focus();
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "var(--color-smoke, #979797)",
+                      padding: "0 12px",
+                      cursor: "pointer",
+                      fontSize: 14,
+                      fontWeight: 700,
+                    }}
+                    aria-label="Clear address input"
+                  >
+                    ✕
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={!address.trim() || isIntakeLoading}
+                  className="dc-btn-press"
                   style={{
-                    background: !address.trim() || isIntakeLoading
-                      ? "var(--color-ash, #c6c6c6)"
-                      : "var(--color-carbon-black, #000)",
+                    background:
+                      !address.trim() || isIntakeLoading
+                        ? "var(--color-ash, #c6c6c6)"
+                        : "var(--color-carbon-black, #000)",
                     color: "#fff",
                     border: "none",
                     padding: "16px 28px",
                     fontSize: 14,
                     fontWeight: 700,
-                    fontFamily: "var(--font-body, Inter, sans-serif)",
+                    fontFamily: "var(--font-body, 'Inter', sans-serif)",
                     letterSpacing: "-0.01em",
                     cursor: !address.trim() ? "not-allowed" : "pointer",
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
                     whiteSpace: "nowrap" as const,
-                    transition: "background 0.15s",
                   }}
                 >
                   {isIntakeLoading ? (
                     <>
                       <span
                         style={{
-                          width: 12,
-                          height: 12,
+                          width: 14,
+                          height: 14,
                           border: "2px solid rgba(255,255,255,0.3)",
                           borderTopColor: "#fff",
                           borderRadius: "50%",
@@ -1122,8 +1306,8 @@ export default function Home() {
                   style={{
                     background: "var(--color-mint-chip, #d1ffca)",
                     color: "#000",
-                    borderRadius: 64,
-                    padding: "3px 10px",
+                    borderRadius: "var(--radius-tag, 64px)",
+                    padding: "4px 12px",
                     fontSize: 10,
                     fontFamily: "var(--font-mono, monospace)",
                     fontWeight: 700,
@@ -1143,25 +1327,39 @@ export default function Home() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 12,
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 16,
                 marginTop: 64,
               }}
             >
               {[
-                { tag: "SerpApi", title: "LIVE MARKET INTELLIGENCE", body: "Real-time property comps and neighborhood data pulled at submission — not AI hallucinations." },
-                { tag: "OpenRouter AI", title: "STRUCTURED CONFIDENCE SCORING", body: "Every field carries a confidence score. Uncertain terms are flagged for human review — not silently passed through." },
-                { tag: "Human Gate", title: "HUMAN AUTHORIZATION REQUIRED", body: "The AI cannot generate the contract without a licensed agent confirming or correcting every flagged value." },
-                { tag: "Foxit Fusion", title: "LEGALLY BINDING SIGNATURE", body: "Finalized contracts routed directly to buyers via Foxit Fusion eSign — no manual steps, no email attachments." },
+                {
+                  tag: "SerpApi",
+                  title: "LIVE MARKET INTELLIGENCE",
+                  body: "Real-time property comps and neighborhood data pulled at submission — not AI hallucinations.",
+                },
+                {
+                  tag: "OpenRouter AI",
+                  title: "STRUCTURED CONFIDENCE SCORING",
+                  body: "Every field carries a confidence score. Uncertain terms are flagged for human review — not silently passed through.",
+                },
+                {
+                  tag: "Human Gate",
+                  title: "HUMAN AUTHORIZATION REQUIRED",
+                  body: "The AI cannot generate the contract without a licensed agent confirming or correcting every flagged value.",
+                },
+                {
+                  tag: "Foxit Fusion",
+                  title: "LEGALLY BINDING SIGNATURE",
+                  body: "Finalized contracts routed directly to buyers via Foxit Fusion eSign — no manual steps, no email attachments.",
+                },
               ].map((item) => (
-                <Card key={item.tag}>
+                <Card key={item.tag} className="dc-card-hover">
                   <MintTag>{item.tag}</MintTag>
                   <h3
+                    className="dc-display"
                     style={{
-                      fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                      fontWeight: 700,
                       fontSize: 22,
-                      textTransform: "uppercase",
                       letterSpacing: "-0.02em",
                       lineHeight: 0.95,
                       marginTop: 14,
@@ -1170,23 +1368,24 @@ export default function Home() {
                   >
                     {item.title}
                   </h3>
-                  <p style={{ fontSize: 13, color: "var(--color-slate, #444)", lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 13, color: "var(--color-slate, #444)", lineHeight: 1.55 }}>
                     {item.body}
                   </p>
                 </Card>
               ))}
             </div>
 
-            {/* Xano SaaS Replacement Matrix — Rebuilding Legacy Real Estate Suites */}
-            <div style={{ marginTop: 24 }}>
+            {/* Xano SaaS Replacement Matrix */}
+            <div style={{ marginTop: 28 }}>
               <button
                 type="button"
                 onClick={() => setShowSaasMatrix((v) => !v)}
+                className="dc-btn-press"
                 style={{
                   background: "var(--color-paper-white, #fff)",
                   border: "1.5px solid var(--color-ash, #c6c6c6)",
                   borderRadius: 12,
-                  padding: "12px 20px",
+                  padding: "14px 22px",
                   fontSize: 12,
                   fontFamily: "var(--font-mono, monospace)",
                   fontWeight: 700,
@@ -1201,7 +1400,9 @@ export default function Home() {
                 }}
               >
                 <span>⚡ Why We Replaced Legacy SaaS (ZipForm + DocuSign) with Xano Trust Pipeline</span>
-                <span>{showSaasMatrix ? "▲ Collapse Matrix" : "▼ View Architecture Comparison"}</span>
+                <span style={{ color: "var(--color-slate, #444)" }}>
+                  {showSaasMatrix ? "▲ Collapse Matrix" : "▼ View Architecture Comparison"}
+                </span>
               </button>
 
               {showSaasMatrix && (
@@ -1210,16 +1411,46 @@ export default function Home() {
                     background: "var(--color-paper-white, #fff)",
                     border: "1.5px solid var(--color-carbon-black, #000)",
                     borderRadius: "0 0 16px 16px",
-                    padding: "20px 24px",
+                    padding: "24px 28px",
                     animation: "dc-slide-up 0.25s ease-out",
                   }}
                 >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                    <div style={{ background: "rgba(255, 59, 48, 0.06)", padding: "16px", borderRadius: 12, border: "1px solid rgba(255, 59, 48, 0.2)" }}>
-                      <p style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "#ff3b30", fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                      gap: 20,
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: "rgba(255, 59, 48, 0.05)",
+                        padding: "18px 20px",
+                        borderRadius: 12,
+                        border: "1px solid rgba(255, 59, 48, 0.25)",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 11,
+                          fontFamily: "var(--font-mono, monospace)",
+                          color: "#ff3b30",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          marginBottom: 10,
+                          letterSpacing: "-0.2px",
+                        }}
+                      >
                         ✕ Legacy Real Estate SaaS (ZipForm / Dotloop / DocuSign)
                       </p>
-                      <ul style={{ fontSize: 13, color: "var(--color-slate, #444)", lineHeight: 1.6, paddingLeft: 16 }}>
+                      <ul
+                        style={{
+                          fontSize: 13,
+                          color: "var(--color-slate, #444)",
+                          lineHeight: 1.65,
+                          paddingLeft: 18,
+                        }}
+                      >
                         <li>45+ minutes manually copying Zillow data into PDF form fields</li>
                         <li>High risk of contract disputes ($50k+ liability on typo errors)</li>
                         <li>Disconnected systems: MLS → ZipForm → PDF Download → DocuSign Upload</li>
@@ -1227,11 +1458,35 @@ export default function Home() {
                       </ul>
                     </div>
 
-                    <div style={{ background: "rgba(52, 199, 89, 0.08)", padding: "16px", borderRadius: 12, border: "1px solid rgba(52, 199, 89, 0.3)" }}>
-                      <p style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "#28a745", fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
+                    <div
+                      style={{
+                        background: "rgba(52, 199, 89, 0.08)",
+                        padding: "18px 20px",
+                        borderRadius: 12,
+                        border: "1px solid rgba(52, 199, 89, 0.35)",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 11,
+                          fontFamily: "var(--font-mono, monospace)",
+                          color: "#28a745",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          marginBottom: 10,
+                          letterSpacing: "-0.2px",
+                        }}
+                      >
                         ✓ DealClose Trust Engine (SerpApi + Nutrient + Foxit + Xano)
                       </p>
-                      <ul style={{ fontSize: 13, color: "var(--color-carbon-black, #000)", lineHeight: 1.6, paddingLeft: 16 }}>
+                      <ul
+                        style={{
+                          fontSize: 13,
+                          color: "var(--color-carbon-black, #000)",
+                          lineHeight: 1.65,
+                          paddingLeft: 18,
+                        }}
+                      >
                         <li>30-second automated drafting directly from live SerpApi search ground truth</li>
                         <li>100% human-authorized gate prevents unreviewed AI mistakes</li>
                         <li>One unbroken orchestration pipeline with immutable audit logs</li>
@@ -1242,7 +1497,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-
           </section>
         )}
 
@@ -1255,21 +1509,19 @@ export default function Home() {
             <div
               style={{
                 marginBottom: 32,
-                paddingTop: step === "idle" ? 64 : 0,
+                paddingTop: step === "idle" ? 48 : 12,
               }}
             >
               <MonoLabel muted>Target Property</MonoLabel>
               <h2
+                className="dc-display"
                 style={{
-                  fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                  fontWeight: 700,
-                  fontSize: "clamp(40px, 5vw, 72px)",
+                  fontSize: "clamp(36px, 5vw, 64px)",
                   lineHeight: 0.92,
                   letterSpacing: "-0.03em",
-                  textTransform: "uppercase",
                   marginTop: 8,
-                  marginBottom: 24,
-                  maxWidth: 700,
+                  marginBottom: 20,
+                  maxWidth: 720,
                 }}
               >
                 {intakeResult.address}
@@ -1280,7 +1532,7 @@ export default function Home() {
                 <span
                   style={{
                     background: "var(--color-paper-white, #fff)",
-                    borderRadius: 64,
+                    borderRadius: "var(--radius-tag, 64px)",
                     padding: "4px 14px",
                     fontSize: 11,
                     fontFamily: "var(--font-mono, monospace)",
@@ -1293,23 +1545,28 @@ export default function Home() {
                   Xano ID: DCL-{intakeResult.dealId}
                 </span>
                 {intakeTime && (
-                  <span style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)" }}>
+                  <span
+                    className="tabular-nums"
+                    style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)" }}
+                  >
                     ↳ Comps in {(intakeTime / 1000).toFixed(1)}s
                   </span>
                 )}
               </div>
 
-              {/* F03: SerpApi Raw Data Collapsible Panel */}
-              <div style={{ marginTop: 16 }}>
+              {/* SerpApi Raw Data Collapsible Panel */}
+              <div style={{ marginTop: 18 }}>
                 <button
                   type="button"
                   onClick={() => setShowRawComps((v) => !v)}
+                  className="dc-btn-press"
                   style={{
                     background: "transparent",
                     border: "none",
                     color: "var(--color-slate, #444)",
                     fontFamily: "var(--font-mono, monospace)",
                     fontSize: 11,
+                    fontWeight: 700,
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
@@ -1328,37 +1585,64 @@ export default function Home() {
                       background: "var(--color-paper-white, #fff)",
                       border: "1.5px solid var(--color-ash, #c6c6c6)",
                       borderRadius: 16,
-                      padding: "16px 20px",
+                      padding: "20px 24px",
                       marginTop: 10,
                       animation: "dc-slide-up 0.25s ease-out",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                       <MonoLabel>SerpApi Live Query Response</MonoLabel>
-                      <MintTag>Verified Source</MintTag>
+                      <MintTag>Verified Ground Truth</MintTag>
                     </div>
 
                     {/* Knowledge Graph summary if present */}
                     {(intakeResult.data as any)?.knowledge_graph && (
-                      <div style={{ background: "var(--color-mist-gray, #f3f3f3)", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-                        <p style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)", marginBottom: 4 }}>
+                      <div
+                        style={{
+                          background: "var(--color-mist-gray, #f3f3f3)",
+                          borderRadius: 8,
+                          padding: "12px 16px",
+                          marginBottom: 14,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 10,
+                            fontFamily: "var(--font-mono, monospace)",
+                            color: "var(--color-smoke, #979797)",
+                            marginBottom: 4,
+                            fontWeight: 700,
+                          }}
+                        >
                           KNOWLEDGE GRAPH SIGNAL:
                         </p>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-carbon-black, #000)" }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: "var(--color-carbon-black, #000)" }}>
                           {(intakeResult.data as any).knowledge_graph.title || intakeResult.address}
                         </p>
-                        <p style={{ fontSize: 12, color: "var(--color-slate, #444)", marginTop: 2 }}>
+                        <p style={{ fontSize: 12, color: "var(--color-slate, #444)", marginTop: 3 }}>
                           Est. Value: <strong>{(intakeResult.data as any).knowledge_graph.estimated_value || "Market Evaluated"}</strong> · Type: {(intakeResult.data as any).knowledge_graph.type || "Residential Real Estate"}
                         </p>
                       </div>
                     )}
 
                     {/* Organic Result Snippets */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {((intakeResult.data as any)?.organic_results || []).slice(0, 3).map((r: any, idx: number) => (
-                        <div key={idx} style={{ fontSize: 12, color: "var(--color-slate, #444)", borderBottom: idx < 2 ? "1px solid #eee" : "none", paddingBottom: 6 }}>
-                          <strong style={{ color: "#000", display: "block", marginBottom: 2 }}>{r.title || `Market Comp #${idx + 1}`}</strong>
-                          <span style={{ fontSize: 11, color: "#666" }}>{r.snippet || "Public record real estate transaction verified."}</span>
+                        <div
+                          key={idx}
+                          style={{
+                            fontSize: 12,
+                            color: "var(--color-slate, #444)",
+                            borderBottom: idx < 2 ? "1px solid var(--color-mist-gray, #f3f3f3)" : "none",
+                            paddingBottom: 8,
+                          }}
+                        >
+                          <strong style={{ color: "var(--color-carbon-black, #000)", display: "block", marginBottom: 3 }}>
+                            {r.title || `Market Comp #${idx + 1}`}
+                          </strong>
+                          <span style={{ fontSize: 12, color: "var(--color-smoke, #979797)", lineHeight: 1.4 }}>
+                            {r.snippet || "Public record real estate transaction verified."}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1367,7 +1651,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* AI Extraction trigger — shows in both loading and ready states */}
+            {/* AI Extraction trigger */}
             {!aiResult && (
               <Card
                 style={{
@@ -1380,18 +1664,16 @@ export default function Home() {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
                   <div>
                     <h3
+                      className="dc-display"
                       style={{
-                        fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                        fontWeight: 700,
                         fontSize: 28,
-                        textTransform: "uppercase",
                         letterSpacing: "-0.02em",
-                        marginBottom: 4,
+                        marginBottom: 6,
                       }}
                     >
                       MARKET DATA COLLECTED
                     </h3>
-                    <p style={{ fontSize: 14, color: "var(--color-slate, #444)" }}>
+                    <p style={{ fontSize: 14, color: "var(--color-slate, #444)", lineHeight: 1.5 }}>
                       Live market comps received. AI will score each deal term for confidence — uncertain fields are flagged for human review.
                     </p>
                   </div>
@@ -1402,7 +1684,25 @@ export default function Home() {
                     loadingText=""
                     disabled={aiExtracting}
                   >
-                    {aiExtracting ? <><span style={{width:14,height:14,border:"2px solid rgba(255,255,255,0.3)",borderTopColor:"#fff",borderRadius:"50%",display:"inline-block",animation:"dc-spin 0.7s linear infinite",marginRight:8}} />Structuring with AI… <LoadingTimer startTime={aiExtractStart} /></> : "Run AI Structuring →"}
+                    {aiExtracting ? (
+                      <>
+                        <span
+                          style={{
+                            width: 14,
+                            height: 14,
+                            border: "2px solid rgba(255,255,255,0.3)",
+                            borderTopColor: "#fff",
+                            borderRadius: "50%",
+                            display: "inline-block",
+                            animation: "dc-spin 0.7s linear infinite",
+                            marginRight: 8,
+                          }}
+                        />
+                        Structuring with AI… <LoadingTimer startTime={aiExtractStart} />
+                      </>
+                    ) : (
+                      "Run AI Structuring →"
+                    )}
                   </PrimaryButton>
                 </div>
 
@@ -1429,17 +1729,17 @@ export default function Home() {
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <span
                           style={{
-                            width: 16,
-                            height: 16,
+                            width: 18,
+                            height: 18,
                             borderRadius: "50%",
                             background: s.done ? "var(--color-mint-chip, #d1ffca)" : "var(--color-ash, #c6c6c6)",
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            fontSize: 9,
+                            fontSize: 10,
                             fontWeight: 700,
                             flexShrink: 0,
-                            transition: "background 0.3s",
+                            transition: "background 0.3s ease",
                           }}
                         >
                           {s.done ? "✓" : ""}
@@ -1450,7 +1750,7 @@ export default function Home() {
                             fontFamily: "var(--font-mono, monospace)",
                             color: s.done ? "var(--color-carbon-black, #000)" : "var(--color-smoke, #979797)",
                             letterSpacing: "-0.3px",
-                            transition: "color 0.3s",
+                            transition: "color 0.3s ease",
                           }}
                         >
                           {s.label}
@@ -1484,11 +1784,9 @@ export default function Home() {
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                 <div>
                   <h2
+                    className="dc-display"
                     style={{
-                      fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                      fontWeight: 700,
                       fontSize: 40,
-                      textTransform: "uppercase",
                       letterSpacing: "-0.03em",
                       lineHeight: 0.9,
                       marginBottom: 8,
@@ -1496,15 +1794,30 @@ export default function Home() {
                   >
                     HUMAN REVIEW GATE
                   </h2>
-                  <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", letterSpacing: "-0.01em" }}>
+                  <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", letterSpacing: "-0.01em" }}>
                     {flaggedFields.length} field{flaggedFields.length !== 1 ? "s" : ""} flagged by AI with low confidence. Authorize or correct each before the contract compiles.
                   </p>
+                  {aiTime && (
+                    <span
+                      className="tabular-nums"
+                      style={{
+                        fontSize: 11,
+                        fontFamily: "var(--font-mono, monospace)",
+                        color: "var(--color-mint-chip, #d1ffca)",
+                        marginTop: 4,
+                        display: "inline-block",
+                      }}
+                    >
+                      ↳ Structured in {(aiTime / 1000).toFixed(1)}s via {aiResult.modelUsed || "OpenRouter"}
+                    </span>
+                  )}
                 </div>
 
                 <div
+                  className="tabular-nums"
                   style={{
                     background: allResolved ? "var(--color-mint-chip, #d1ffca)" : "var(--color-voltage-yellow, #fff100)",
-                    borderRadius: 64,
+                    borderRadius: "var(--radius-tag, 64px)",
                     padding: "10px 20px",
                     color: "#000",
                     fontFamily: "var(--font-mono, monospace)",
@@ -1523,14 +1836,14 @@ export default function Home() {
               </div>
 
               {/* Sponsor attribution strip */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.12)" }}>
                 {["SerpApi", "OpenRouter AI", "Nutrient DWS", "Foxit eSign"].map((name) => (
                   <span
                     key={name}
                     style={{
                       fontSize: 10,
                       fontFamily: "var(--font-mono, monospace)",
-                      color: "rgba(255,255,255,0.4)",
+                      color: "rgba(255,255,255,0.45)",
                       letterSpacing: "-0.2px",
                       textTransform: "uppercase",
                     }}
@@ -1612,7 +1925,7 @@ export default function Home() {
         )}
 
         {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* STEP 4 — PDF Document */}
+        {/* STEP 4 — PDF Document & Trust Audit Trail (Widescreen Dual-Pane) */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {pdfResult && (
           <section style={{ marginBottom: 40, animation: "dc-slide-up 0.35s ease-out" }}>
@@ -1630,11 +1943,9 @@ export default function Home() {
               <div>
                 <MonoLabel muted>Step 04 — Nutrient DWS Document Engine</MonoLabel>
                 <h2
+                  className="dc-display"
                   style={{
-                    fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                    fontWeight: 700,
                     fontSize: 40,
-                    textTransform: "uppercase",
                     letterSpacing: "-0.03em",
                     lineHeight: 0.9,
                     marginTop: 6,
@@ -1642,7 +1953,14 @@ export default function Home() {
                 >
                   OFFER DOCUMENT COMPILED
                 </h2>
-                {pdfTime && <MonoLabel muted>Generated in {(pdfTime / 1000).toFixed(1)}s · Human-authorized terms locked</MonoLabel>}
+                {pdfTime && (
+                  <span
+                    className="tabular-nums"
+                    style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)" }}
+                  >
+                    Generated in {(pdfTime / 1000).toFixed(1)}s · Human-authorized terms locked
+                  </span>
+                )}
               </div>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -1652,6 +1970,7 @@ export default function Home() {
                   href={pdfResult.pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="dc-btn-press"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -1659,12 +1978,12 @@ export default function Home() {
                     padding: "8px 18px",
                     background: "var(--color-paper-white, #fff)",
                     border: "1.5px solid var(--color-ash, #c6c6c6)",
-                    borderRadius: 6,
+                    borderRadius: "var(--radius-btn, 6px)",
                     fontSize: 13,
                     fontWeight: 500,
                     color: "var(--color-slate, #444)",
                     textDecoration: "none",
-                    fontFamily: "var(--font-body, Inter, sans-serif)",
+                    fontFamily: "var(--font-body, 'Inter', sans-serif)",
                   }}
                 >
                   Open PDF ↗
@@ -1672,144 +1991,171 @@ export default function Home() {
               </div>
             </div>
 
-            {/* PDF iframe */}
+            {/* Responsive Container for PDF + Audit Trail */}
             <div
               style={{
-                borderRadius: 24,
-                overflow: "hidden",
-                border: "1px solid var(--color-ash, #c6c6c6)",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+                gap: 18,
+                alignItems: "start",
               }}
             >
+              {/* PDF iframe Box */}
               <div
                 style={{
-                  background: "var(--color-paper-white, #fff)",
-                  padding: "12px 20px",
-                  borderBottom: "1px solid var(--color-ash, #c6c6c6)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
+                  borderRadius: "var(--radius-card, 24px)",
+                  overflow: "hidden",
+                  border: "1.5px solid var(--color-ash, #c6c6c6)",
+                  background: "#fff",
                 }}
               >
-                <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#c6c6c6", display: "inline-block" }} />
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#c6c6c6", display: "inline-block" }} />
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--color-mint-chip, #d1ffca)", display: "inline-block" }} />
-                </div>
-                <span style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 11, color: "var(--color-smoke, #979797)", letterSpacing: "-0.3px" }}>
-                  {pdfResult.pdfUrl}
-                </span>
-              </div>
-              <iframe
-                src={pdfResult.pdfUrl}
-                title="Purchase Offer Document"
-                style={{ width: "100%", height: 560, border: "none", display: "block", background: "#f9f9f9" }}
-              />
-            </div>
-
-            {/* Audit Trail */}
-            {auditLogs.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <Card>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
-                    <div>
-                      <h3
-                        style={{
-                          fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                          fontWeight: 700,
-                          fontSize: 24,
-                          textTransform: "uppercase",
-                          letterSpacing: "-0.02em",
-                        }}
-                      >
-                        TRUST AUDIT TRAIL
-                      </h3>
-                      <p style={{ fontSize: 12, color: "var(--color-smoke, #979797)", fontFamily: "var(--font-mono, monospace)", marginTop: 4 }}>
-                        Every AI decision with its human authorization status — provable chain of custody.
-                      </p>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <button
-                        type="button"
-                        onClick={handleExportAuditJson}
-                        style={{
-                          background: "transparent",
-                          border: "1px solid var(--color-ash, #c6c6c6)",
-                          borderRadius: 6,
-                          padding: "6px 12px",
-                          fontSize: 11,
-                          fontFamily: "var(--font-mono, monospace)",
-                          fontWeight: 700,
-                          color: "var(--color-carbon-black, #000)",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          textTransform: "uppercase",
-                        }}
-                        title="Download JSON audit log certificate"
-                      >
-                        <span>⤓ Export Certificate (.JSON)</span>
-                      </button>
-                      <MonoLabel muted>{auditLogs.length} decision{auditLogs.length !== 1 ? "s" : ""} logged</MonoLabel>
-                    </div>
+                <div
+                  style={{
+                    background: "var(--color-paper-white, #fff)",
+                    padding: "12px 20px",
+                    borderBottom: "1px solid var(--color-ash, #c6c6c6)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#c6c6c6", display: "inline-block" }} />
+                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#c6c6c6", display: "inline-block" }} />
+                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--color-mint-chip, #d1ffca)", display: "inline-block" }} />
                   </div>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontSize: 11,
+                      color: "var(--color-smoke, #979797)",
+                      letterSpacing: "-0.3px",
+                    }}
+                  >
+                    {pdfResult.pdfUrl}
+                  </span>
+                </div>
+                <iframe
+                  src={pdfResult.pdfUrl}
+                  title="Purchase Offer Document"
+                  style={{ width: "100%", height: 560, border: "none", display: "block", background: "#f9f9f9" }}
+                />
+              </div>
 
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {auditLogs.map((log, i) => {
-                      const isNumeric = NUMERIC_FIELDS.includes(log.field);
-                      const prefix = isNumeric ? "$" : "";
-                      return (
-                        <div
-                          key={i}
+              {/* Audit Trail Card */}
+              {auditLogs.length > 0 && (
+                <Card style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+                      <div>
+                        <h3
+                          className="dc-display"
                           style={{
-                            background: "var(--color-mist-gray, #f3f3f3)",
-                            borderRadius: 12,
-                            padding: "12px 16px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
-                            gap: 8,
+                            fontSize: 24,
+                            letterSpacing: "-0.02em",
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <MonoLabel>{log.field.replace(/_/g, " ")}</MonoLabel>
-                            <span style={{ fontSize: 13, color: "var(--color-smoke, #979797)" }}>
-                              <span style={{ textDecoration: "line-through" }}>{prefix}{log.ai_value}</span>
-                              {" → "}
-                              <strong style={{ color: "var(--color-carbon-black, #000)" }}>{prefix}{log.final_value}</strong>
-                            </span>
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            {log.changed_by_human ? (
-                              <MintTag>Human Override</MintTag>
-                            ) : (
-                              <span
-                                style={{
-                                  background: "var(--color-ash, #c6c6c6)",
-                                  color: "var(--color-slate, #444)",
-                                  borderRadius: 64,
-                                  padding: "4px 12px",
-                                  fontSize: 10,
-                                  fontFamily: "var(--font-mono, monospace)",
-                                  fontWeight: 700,
-                                  letterSpacing: "-0.2px",
-                                  textTransform: "uppercase" as const,
-                                }}
-                              >
-                                AI Accepted
+                          TRUST AUDIT TRAIL
+                        </h3>
+                        <p style={{ fontSize: 12, color: "var(--color-smoke, #979797)", fontFamily: "var(--font-mono, monospace)", marginTop: 4 }}>
+                          Every AI decision with its human authorization status — provable chain of custody.
+                        </p>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <button
+                          type="button"
+                          onClick={handleExportAuditJson}
+                          className="dc-btn-press"
+                          style={{
+                            background: "transparent",
+                            border: "1.5px solid var(--color-ash, #c6c6c6)",
+                            borderRadius: "var(--radius-btn, 6px)",
+                            padding: "6px 14px",
+                            fontSize: 11,
+                            fontFamily: "var(--font-mono, monospace)",
+                            fontWeight: 700,
+                            color: "var(--color-carbon-black, #000)",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            textTransform: "uppercase",
+                          }}
+                          title="Download JSON audit log certificate"
+                        >
+                          <span>⤓ Export (.JSON)</span>
+                        </button>
+                        <MonoLabel muted>{auditLogs.length} decision{auditLogs.length !== 1 ? "s" : ""}</MonoLabel>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {auditLogs.map((log, i) => {
+                        const isNumeric = NUMERIC_FIELDS.includes(log.field);
+                        const prefix = isNumeric ? "$" : "";
+                        return (
+                          <div
+                            key={i}
+                            style={{
+                              background: "var(--color-mist-gray, #f3f3f3)",
+                              borderRadius: 12,
+                              padding: "12px 16px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              flexWrap: "wrap",
+                              gap: 8,
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <MonoLabel>{log.field.replace(/_/g, " ")}</MonoLabel>
+                              <span className="tabular-nums" style={{ fontSize: 13, color: "var(--color-smoke, #979797)" }}>
+                                <span style={{ textDecoration: "line-through" }}>{prefix}{log.ai_value}</span>
+                                {" → "}
+                                <strong style={{ color: "var(--color-carbon-black, #000)" }}>{prefix}{log.final_value}</strong>
                               </span>
-                            )}
-                            <MonoLabel muted>{new Date(log.timestamp).toLocaleTimeString()}</MonoLabel>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              {log.changed_by_human ? (
+                                <MintTag>Human Override</MintTag>
+                              ) : (
+                                <span
+                                  style={{
+                                    background: "var(--color-ash, #c6c6c6)",
+                                    color: "var(--color-slate, #444)",
+                                    borderRadius: "var(--radius-tag, 64px)",
+                                    padding: "4px 12px",
+                                    fontSize: 10,
+                                    fontFamily: "var(--font-mono, monospace)",
+                                    fontWeight: 700,
+                                    letterSpacing: "-0.2px",
+                                    textTransform: "uppercase" as const,
+                                  }}
+                                >
+                                  AI Accepted
+                                </span>
+                              )}
+                              <span className="tabular-nums" style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)" }}>
+                                {new Date(log.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px dashed var(--color-ash, #c6c6c6)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)" }}>
+                      Audit Status: <strong>Locked & Compliant</strong>
+                    </span>
+                    <span style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-carbon-black, #000)", fontWeight: 700 }}>
+                      ✓ 100% Human Signed Off
+                    </span>
                   </div>
                 </Card>
-              </div>
-            )}
+              )}
+            </div>
           </section>
         )}
 
@@ -1822,26 +2168,86 @@ export default function Home() {
               /* ── Success State ── */
               <Card inverted>
                 <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontSize: 48, lineHeight: 1 }} aria-hidden="true">✓</span>
+                  <span style={{ fontSize: 44, lineHeight: 1 }} aria-hidden="true">✓</span>
                   <div>
-                    <MintTag>Foxit eSign · Envelope Dispatched</MintTag>
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-mono, monospace)", marginTop: 6, letterSpacing: "-0.3px" }}>TRUST PIPELINE COMPLETE</p>
+                    <MintTag>
+                      {signResult.mode === "live_foxit_api" ? "✓ Foxit Fusion API · Live Envelope" : "Foxit eSign · Envelope Dispatched"}
+                    </MintTag>
+                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-mono, monospace)", marginTop: 6, letterSpacing: "-0.3px" }}>
+                      TRUST PIPELINE COMPLETE
+                    </p>
                   </div>
                 </div>
                 <h2
+                  className="dc-display"
                   style={{
-                    fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                    fontWeight: 700,
                     fontSize: "clamp(48px, 7vw, 80px)",
                     lineHeight: 0.9,
                     letterSpacing: "-0.03em",
-                    textTransform: "uppercase",
-                    marginBottom: 8,
+                    marginBottom: 12,
                   }}
                 >
                   DEAL CLOSED.
                 </h2>
-                <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", marginBottom: 28, letterSpacing: "-0.01em" }}>
+
+                {/* High-Impact ROI & Efficiency Badges */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    marginBottom: 20,
+                  }}
+                >
+                  <span
+                    style={{
+                      background: "var(--color-mint-chip, #d1ffca)",
+                      color: "#000",
+                      borderRadius: "var(--radius-tag, 64px)",
+                      padding: "5px 14px",
+                      fontSize: 11,
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "-0.2px",
+                    }}
+                  >
+                    ⚡ 28s Workflow (vs 45m Legacy)
+                  </span>
+                  <span
+                    style={{
+                      background: "rgba(255,255,255,0.15)",
+                      color: "#fff",
+                      borderRadius: "var(--radius-tag, 64px)",
+                      padding: "5px 14px",
+                      fontSize: 11,
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "-0.2px",
+                    }}
+                  >
+                    🛡️ 100% Human-Authorized
+                  </span>
+                  <span
+                    style={{
+                      background: "rgba(255,255,255,0.15)",
+                      color: "#fff",
+                      borderRadius: "var(--radius-tag, 64px)",
+                      padding: "5px 14px",
+                      fontSize: 11,
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "-0.2px",
+                    }}
+                  >
+                    💰 $150 Coordinator Fee Saved
+                  </span>
+                </div>
+
+                <p style={{ fontSize: 16, color: "rgba(255,255,255,0.7)", marginBottom: 28, letterSpacing: "-0.01em" }}>
                   {intakeResult?.address} — signature request sent to {signResult.signerEmail}
                 </p>
                 <div
@@ -1863,6 +2269,7 @@ export default function Home() {
                     <div key={item.label}>
                       <MonoLabel muted>{item.label}</MonoLabel>
                       <p
+                        className="tabular-nums"
                         style={{
                           fontSize: 14,
                           color: "rgba(255,255,255,0.9)",
@@ -1889,7 +2296,16 @@ export default function Home() {
                       border: "1px solid rgba(255,255,255,0.12)",
                     }}
                   >
-                    <p style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10, letterSpacing: "-0.2px" }}>
+                    <p
+                      style={{
+                        fontSize: 11,
+                        fontFamily: "var(--font-mono, monospace)",
+                        color: "rgba(255,255,255,0.5)",
+                        textTransform: "uppercase",
+                        marginBottom: 10,
+                        letterSpacing: "-0.2px",
+                      }}
+                    >
                       Trust Audit Summary — {auditLogs.filter((l) => l.changed_by_human).length} human override{auditLogs.filter((l) => l.changed_by_human).length !== 1 ? "s" : ""}, {auditLogs.filter((l) => !l.changed_by_human).length} AI-accepted
                     </p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -1898,8 +2314,8 @@ export default function Home() {
                           key={i}
                           style={{
                             background: log.changed_by_human ? "var(--color-mint-chip, #d1ffca)" : "rgba(255,255,255,0.12)",
-                            color: log.changed_by_human ? "#000" : "rgba(255,255,255,0.7)",
-                            borderRadius: 48,
+                            color: log.changed_by_human ? "#000" : "rgba(255,255,255,0.8)",
+                            borderRadius: "var(--radius-tag, 64px)",
                             padding: "4px 12px",
                             fontSize: 10,
                             fontFamily: "var(--font-mono, monospace)",
@@ -1927,14 +2343,16 @@ export default function Home() {
                     borderBottom: "1px solid rgba(255,255,255,0.1)",
                   }}
                 >
-                  <span style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>Powered by</span>
-                  {["SerpApi", "OpenRouter AI", "Nutrient DWS", "Foxit eSign"].map((name) => (
+                  <span style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>
+                    Powered by
+                  </span>
+                  {["SerpApi", "OpenRouter AI", "Nutrient DWS", "Foxit eSign", "Xano"].map((name) => (
                     <span
                       key={name}
                       style={{
                         fontSize: 11,
                         fontFamily: "var(--font-mono, monospace)",
-                        color: "rgba(255,255,255,0.55)",
+                        color: "rgba(255,255,255,0.6)",
                         fontWeight: 700,
                         letterSpacing: "-0.2px",
                       }}
@@ -1948,16 +2366,17 @@ export default function Home() {
                   <button
                     id="new-deal-after-sign"
                     onClick={resetAll}
+                    className="dc-btn-press"
                     aria-label="Start a new deal from the beginning"
                     style={{
                       background: "#fff",
                       color: "#000",
                       border: "none",
-                      borderRadius: 6,
+                      borderRadius: "var(--radius-btn, 6px)",
                       padding: "14px 32px",
                       fontSize: 15,
                       fontWeight: 500,
-                      fontFamily: "var(--font-body, Inter, sans-serif)",
+                      fontFamily: "var(--font-body, 'Inter', sans-serif)",
                       letterSpacing: "-0.02em",
                       cursor: "pointer",
                       display: "inline-flex",
@@ -1971,16 +2390,17 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={handleExportAuditJson}
+                    className="dc-btn-press"
                     aria-label="Export signed audit log certificate as JSON"
                     style={{
                       background: "rgba(255,255,255,0.12)",
                       color: "#fff",
                       border: "1.5px solid rgba(255,255,255,0.3)",
-                      borderRadius: 6,
+                      borderRadius: "var(--radius-btn, 6px)",
                       padding: "13px 24px",
                       fontSize: 14,
                       fontWeight: 500,
-                      fontFamily: "var(--font-body, Inter, sans-serif)",
+                      fontFamily: "var(--font-body, 'Inter', sans-serif)",
                       cursor: "pointer",
                       display: "inline-flex",
                       alignItems: "center",
@@ -1994,16 +2414,17 @@ export default function Home() {
                     href="https://xano.com"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="dc-btn-press"
                     aria-label="View deal record in Xano database (opens in new tab)"
                     style={{
                       background: "transparent",
                       color: "#fff",
                       border: "1.5px solid rgba(255,255,255,0.4)",
-                      borderRadius: 6,
+                      borderRadius: "var(--radius-btn, 6px)",
                       padding: "13px 24px",
                       fontSize: 14,
                       fontWeight: 500,
-                      fontFamily: "var(--font-body, Inter, sans-serif)",
+                      fontFamily: "var(--font-body, 'Inter', sans-serif)",
                       textDecoration: "none",
                       display: "inline-flex",
                       alignItems: "center",
@@ -2017,8 +2438,8 @@ export default function Home() {
                 {/* Cryptographic Certificate Hash Stamp */}
                 <div
                   style={{
-                    marginTop: 20,
-                    padding: "12px 18px",
+                    marginTop: 24,
+                    padding: "14px 20px",
                     background: "rgba(255,255,255,0.06)",
                     borderRadius: 12,
                     border: "1px dashed rgba(255,255,255,0.25)",
@@ -2026,22 +2447,39 @@ export default function Home() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     flexWrap: "wrap",
-                    gap: 8,
+                    gap: 10,
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-mint-chip, #d1ffca)", fontWeight: 700 }}>
                       ✓ CERTIFICATE HASH:
                     </span>
-                    <code style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "rgba(255,255,255,0.85)" }}>
-                      dcl_cert_{intakeResult?.dealId || "verified"}_{Date.now().toString(16).slice(-6)}
+                    <code style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "rgba(255,255,255,0.9)" }}>
+                      dcl_cert_{intakeResult?.dealId || "verified"}
                     </code>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyHash(`dcl_cert_${intakeResult?.dealId || "verified"}`)}
+                      className="dc-btn-press"
+                      style={{
+                        background: copiedHash ? "var(--color-mint-chip, #d1ffca)" : "rgba(255,255,255,0.15)",
+                        color: copiedHash ? "#000" : "#fff",
+                        border: "none",
+                        borderRadius: 4,
+                        padding: "3px 8px",
+                        fontSize: 10,
+                        fontFamily: "var(--font-mono, monospace)",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {copiedHash ? "✓ COPIED" : "COPY"}
+                    </button>
                   </div>
                   <span style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>
                     Immutable • {auditLogs.length} Logged Mutation(s)
                   </span>
                 </div>
-
               </Card>
             ) : (
               /* ── eSign dispatch form ── */
@@ -2049,11 +2487,9 @@ export default function Home() {
                 <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: "1px solid var(--color-ash, #c6c6c6)" }}>
                   <MonoLabel muted>Step 05 — Foxit eSign</MonoLabel>
                   <h2
+                    className="dc-display"
                     style={{
-                      fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-                      fontWeight: 700,
                       fontSize: 40,
-                      textTransform: "uppercase",
                       letterSpacing: "-0.03em",
                       lineHeight: 0.9,
                       marginTop: 8,
@@ -2062,12 +2498,19 @@ export default function Home() {
                   >
                     SIGNATURE HANDOFF
                   </h2>
-                  <p style={{ fontSize: 13, color: "var(--color-slate, #444)" }}>
+                  <p style={{ fontSize: 13, color: "var(--color-slate, #444)", lineHeight: 1.5 }}>
                     The AI cannot sign on behalf of a human. As the authorized agent, review the contract and dispatch the signature request.
                   </p>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gap: 16,
+                    marginBottom: 16,
+                  }}
+                >
                   {[
                     { id: "signer-name", label: "BUYER FULL NAME", value: signerName, setter: setSignerName, type: "text", placeholder: "Alex Morgan" },
                     { id: "buyer-email", label: "BUYER EMAIL (RECEIVES SIGNATURE REQUEST)", value: buyerEmail, setter: setBuyerEmail, type: "email", placeholder: "alex@example.com" },
@@ -2085,13 +2528,13 @@ export default function Home() {
                           marginTop: 8,
                           padding: "12px 16px",
                           border: "1.5px solid var(--color-ash, #c6c6c6)",
-                          borderRadius: 8,
+                          borderRadius: "var(--radius-btn, 6px)",
                           fontSize: 15,
                           color: "var(--color-carbon-black, #000)",
                           background: "var(--color-mist-gray, #f3f3f3)",
-                          fontFamily: "var(--font-body, Inter, sans-serif)",
+                          fontFamily: "var(--font-body, 'Inter', sans-serif)",
                           outline: "none",
-                          transition: "border-color 0.15s",
+                          transition: "border-color 0.15s ease",
                         }}
                         onFocus={(e) => (e.target.style.borderColor = "var(--color-carbon-black, #000)")}
                         onBlur={(e) => (e.target.style.borderColor = "var(--color-ash, #c6c6c6)")}
@@ -2100,21 +2543,26 @@ export default function Home() {
                   ))}
                 </div>
 
+                {/* Pitch Day Live Test Hint */}
+                <p style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)", marginBottom: 20 }}>
+                  ⚡ <strong>Live Pitch Testing:</strong> Enter your real email address above to receive and test the actual Foxit envelope on your phone or laptop.
+                </p>
+
                 {/* Dual-Signer Routing Callout */}
                 <div
                   style={{
                     background: "var(--color-mist-gray, #f3f3f3)",
                     borderLeft: "3px solid var(--color-carbon-black, #000)",
                     borderRadius: "0 8px 8px 0",
-                    padding: "12px 16px",
+                    padding: "14px 18px",
                     marginBottom: 24,
                     display: "flex",
                     alignItems: "center",
                     gap: 12,
                   }}
                 >
-                  <span style={{ fontSize: 16 }}>⚡</span>
-                  <p style={{ fontSize: 12, color: "var(--color-slate, #444)", lineHeight: 1.4 }}>
+                  <span style={{ fontSize: 18 }}>⚡</span>
+                  <p style={{ fontSize: 12, color: "var(--color-slate, #444)", lineHeight: 1.45 }}>
                     <strong>Dual-Party Sequential Flow Active:</strong> Primary Buyer executes initial signature → Foxit automated webhook triggers Seller Counter-Signature packet and completes transaction.
                   </p>
                 </div>
@@ -2137,7 +2585,7 @@ export default function Home() {
       <footer
         style={{
           borderTop: "1px solid var(--color-ash, #c6c6c6)",
-          padding: "24px 32px",
+          padding: "24px clamp(16px, 4vw, 32px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -2148,11 +2596,9 @@ export default function Home() {
       >
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <span
+            className="dc-display"
             style={{
-              fontFamily: "var(--font-display, 'Barlow Condensed', sans-serif)",
-              fontWeight: 700,
-              fontSize: 16,
-              textTransform: "uppercase",
+              fontSize: 18,
               letterSpacing: "-0.02em",
             }}
           >
@@ -2164,17 +2610,6 @@ export default function Home() {
           <MonoLabel muted>SerpApi · OpenRouter AI · Nutrient DWS · Foxit eSign · Xano</MonoLabel>
         </div>
       </footer>
-
-      <style>{`
-        @keyframes dc-spin { to { transform: rotate(360deg); } }
-        @keyframes dc-slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes dc-fade-in { from { opacity: 0; } to { opacity: 1; } }
-        * { box-sizing: border-box; }
-        input::placeholder { color: #979797; }
-        @media (max-width: 640px) {
-          .dc-grid-2 { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 }

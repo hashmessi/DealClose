@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     const sentAt = new Date().toISOString();
     let envelopeId = `foxit_env_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     let foxitResponse: any = null;
+    let isLiveFoxit = false;
 
     if (foxitClientId && foxitClientSecret && foxitClientId.trim() !== "" && foxitClientSecret.trim() !== "") {
       try {
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
         if (fusionRes.ok) {
           foxitResponse = await fusionRes.json();
           envelopeId = foxitResponse.folderId || foxitResponse.folder_id || foxitResponse.envelope_id || envelopeId;
+          isLiveFoxit = true;
         } else {
           const errText = await fusionRes.text();
           console.warn("Foxit Fusion API returned non-200:", errText);
@@ -100,6 +102,7 @@ export async function POST(request: Request) {
         if (foxitRes.ok) {
           foxitResponse = await foxitRes.json();
           envelopeId = foxitResponse.envelope_id || envelopeId;
+          isLiveFoxit = true;
         } else {
           const errText = await foxitRes.text();
           console.warn("Legacy Foxit API returned non-200:", errText);
@@ -132,7 +135,10 @@ export async function POST(request: Request) {
       status: "signature_sent",
       signerEmail: cleanEmail,
       sentAt,
-      message: `Signature request successfully dispatched to ${cleanEmail} via Foxit eSign.`,
+      mode: isLiveFoxit ? "live_foxit_api" : "sandbox_simulation",
+      message: isLiveFoxit
+        ? `Signature request successfully dispatched to ${cleanEmail} via Live Foxit eSign API.`
+        : `Signature request generated for ${cleanEmail} (Foxit eSign Envelope Engine).`,
     });
   } catch (error: any) {
     console.error("eSign routing error:", error);
