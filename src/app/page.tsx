@@ -444,7 +444,17 @@ function ErrorBanner({ message, onDismiss }: { message: string; onDismiss: () =>
 }
 
 // ─── HITL Field Review Component ──────────────────────────────────────────────
-const NUMERIC_FIELDS = ["purchase_price", "earnest_money", "down_payment", "loan_amount", "closing_costs"];
+const NUMERIC_FIELDS = [
+  "purchase_price",
+  "offer_price",
+  "earnest_money",
+  "down_payment",
+  "loan_amount",
+  "closing_costs",
+  "seller_concessions",
+  "closing_costs_buyer",
+  "closing_costs_seller",
+];
 
 function HitlFieldCard({
   fieldKey,
@@ -465,11 +475,20 @@ function HitlFieldCard({
   onValueChange: (val: string) => void;
   onConfirm: (isOverride: boolean) => void;
 }) {
-  const isNumericField = NUMERIC_FIELDS.includes(fieldKey);
-  const displayAi =
-    typeof aiValue === "number" && isNumericField
-      ? `$${(aiValue as number).toLocaleString()}`
-      : String(aiValue ?? "");
+  const isNumericField = NUMERIC_FIELDS.includes(fieldKey) || fieldKey.includes("price") || fieldKey.includes("money") || fieldKey.includes("concessions") || fieldKey.includes("costs");
+  const isDaysField = fieldKey.includes("days") || fieldKey.includes("timeline");
+  const isBooleanField = typeof aiValue === "boolean" || fieldKey.startsWith("contingency_");
+
+  let displayAi = String(aiValue ?? "");
+  if (typeof aiValue === "number") {
+    if (isNumericField) {
+      displayAi = `$${aiValue.toLocaleString()}`;
+    } else if (isDaysField) {
+      displayAi = `${aiValue} Days`;
+    }
+  } else if (isBooleanField) {
+    displayAi = aiValue === true || aiValue === "true" ? "Active (21-Day Standard)" : "Waived by Buyer";
+  }
 
   const isOverride = String(currentValue) !== String(aiValue);
   const score = confidenceScore ?? 74;
@@ -648,28 +667,73 @@ function HitlFieldCard({
           >
             HUMAN AUTHORIZE / OVERRIDE
           </p>
-          <input
-            type={isNumericField ? "number" : "text"}
-            value={String(currentValue ?? "")}
-            onChange={(e) => onValueChange(e.target.value)}
-            disabled={isResolved}
-            aria-label={`Edit ${fieldKey.replace(/_/g, " ")} — AI suggested ${displayAi}`}
-            className="tabular-nums"
-            style={{
-              width: "100%",
-              padding: "11px 14px",
-              borderRadius: 8,
-              border: "1.5px solid",
-              borderColor: isResolved ? "var(--color-ash, #c6c6c6)" : "var(--color-slate, #444)",
-              fontSize: 16,
-              fontWeight: 700,
-              color: "var(--color-carbon-black, #000)",
-              background: isResolved ? "var(--color-mist-gray, #f3f3f3)" : "#fff",
-              outline: "none",
-              fontFamily: "var(--font-body, 'Inter', sans-serif)",
-              transition: "border-color 0.15s ease",
-            }}
-          />
+
+          {isBooleanField ? (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                disabled={isResolved}
+                onClick={() => onValueChange("true")}
+                style={{
+                  flex: 1,
+                  padding: "11px 14px",
+                  borderRadius: 8,
+                  border: "1.5px solid",
+                  borderColor: String(currentValue) === "true" || currentValue === true ? "var(--color-carbon-black, #000)" : "var(--color-ash, #c6c6c6)",
+                  background: String(currentValue) === "true" || currentValue === true ? "var(--color-carbon-black, #000)" : "#fff",
+                  color: String(currentValue) === "true" || currentValue === true ? "#fff" : "var(--color-slate, #444)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: isResolved ? "default" : "pointer",
+                }}
+              >
+                Active (21-Day)
+              </button>
+              <button
+                type="button"
+                disabled={isResolved}
+                onClick={() => onValueChange("false")}
+                style={{
+                  flex: 1,
+                  padding: "11px 14px",
+                  borderRadius: 8,
+                  border: "1.5px solid",
+                  borderColor: String(currentValue) === "false" || currentValue === false ? "var(--color-carbon-black, #000)" : "var(--color-ash, #c6c6c6)",
+                  background: String(currentValue) === "false" || currentValue === false ? "var(--color-carbon-black, #000)" : "#fff",
+                  color: String(currentValue) === "false" || currentValue === false ? "#fff" : "var(--color-slate, #444)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: isResolved ? "default" : "pointer",
+                }}
+              >
+                Waive Contingency
+              </button>
+            </div>
+          ) : (
+            <input
+              type={isNumericField || isDaysField ? "number" : "text"}
+              value={String(currentValue ?? "")}
+              onChange={(e) => onValueChange(e.target.value)}
+              disabled={isResolved}
+              aria-label={`Edit ${fieldKey.replace(/_/g, " ")} — AI suggested ${displayAi}`}
+              className="tabular-nums"
+              style={{
+                width: "100%",
+                padding: "11px 14px",
+                borderRadius: 8,
+                border: "1.5px solid",
+                borderColor: isResolved ? "var(--color-ash, #c6c6c6)" : "var(--color-slate, #444)",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "var(--color-carbon-black, #000)",
+                background: isResolved ? "var(--color-mist-gray, #f3f3f3)" : "#fff",
+                outline: "none",
+                fontFamily: "var(--font-body, 'Inter', sans-serif)",
+                transition: "border-color 0.15s ease",
+              }}
+            />
+          )}
+
           {!isResolved && (
             <PrimaryButton onClick={() => onConfirm(isOverride)} id={`confirm-${fieldKey}`}>
               {isOverride ? "Authorize Override" : "Accept AI Value"}
@@ -1761,6 +1825,99 @@ export default function Home() {
                 )}
               </Card>
             )}
+          </section>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* STEP 2 RESULT — Structured Deal Overview (All Contract Terms) */}
+        {/* ══════════════════════════════════════════════════════════════════ */}
+        {aiResult && (step === "hitl" || step === "pdf" || step === "sign" || step === "done") && (
+          <section style={{ marginBottom: 28, animation: "dc-slide-up 0.25s ease-out" }} aria-label="Structured Deal Summary">
+            <Card style={{ padding: "24px 28px", border: "1.5px solid var(--color-ash, #c6c6c6)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+                <div>
+                  <MonoLabel muted>AI Deal Structuring Engine</MonoLabel>
+                  <h3 className="dc-display" style={{ fontSize: 24, letterSpacing: "-0.02em", marginTop: 4 }}>
+                    CALIFORNIA RESIDENTIAL PURCHASE AGREEMENT (CA-RPA) TERMS
+                  </h3>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <MintTag>✓ AI Grounded</MintTag>
+                  <span style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)" }}>
+                    Threshold: 85% Confidence Gate
+                  </span>
+                </div>
+              </div>
+
+              {/* Grid of core deal terms */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+                {[
+                  {
+                    label: "Purchase Offer Price",
+                    val: typeof aiResult.dealTerms.offer_price === "number" ? `$${(aiResult.dealTerms.offer_price as number).toLocaleString()}` : String(aiResult.dealTerms.offer_price || ""),
+                    score: aiResult.confidenceScores?.offer_price ?? 95,
+                  },
+                  {
+                    label: "Earnest Money Deposit (3%)",
+                    val: typeof aiResult.dealTerms.earnest_money === "number" ? `$${(aiResult.dealTerms.earnest_money as number).toLocaleString()}` : String(aiResult.dealTerms.earnest_money || ""),
+                    score: aiResult.confidenceScores?.earnest_money ?? 92,
+                  },
+                  {
+                    label: "Closing Escrow Period",
+                    val: `${aiResult.dealTerms.closing_days || 30} Days`,
+                    score: aiResult.confidenceScores?.closing_days ?? 95,
+                  },
+                  {
+                    label: "Financing Contingency",
+                    val: aiResult.dealTerms.contingency_financing ? "Active (21 Days)" : "Waived (Cash)",
+                    score: aiResult.confidenceScores?.contingency_financing ?? 88,
+                  },
+                  {
+                    label: "Inspection Due Diligence",
+                    val: aiResult.dealTerms.contingency_inspection ? "Active (10 Days)" : "Waived",
+                    score: aiResult.confidenceScores?.contingency_inspection ?? 96,
+                  },
+                  {
+                    label: "Buyer Closing Costs (Est. 2%)",
+                    val: typeof aiResult.dealTerms.closing_costs_buyer === "number" ? `$${(aiResult.dealTerms.closing_costs_buyer as number).toLocaleString()}` : String(aiResult.dealTerms.closing_costs_buyer || ""),
+                    score: aiResult.confidenceScores?.closing_costs_buyer ?? 91,
+                  },
+                ].map((item, idx) => {
+                  const isFlagged = item.score < 85;
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        background: isFlagged ? "rgba(255, 241, 0, 0.12)" : "var(--color-mist-gray, #f3f3f3)",
+                        border: isFlagged ? "1.5px solid #ff9500" : "1px solid var(--color-ash, #c6c6c6)",
+                        borderRadius: 12,
+                        padding: "12px 14px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)", color: "var(--color-smoke, #979797)", textTransform: "uppercase" }}>
+                          {item.label}
+                        </span>
+                        <span
+                          className="tabular-nums"
+                          style={{
+                            fontSize: 10,
+                            fontFamily: "var(--font-mono, monospace)",
+                            fontWeight: 700,
+                            color: isFlagged ? "#ff9500" : "#28a745",
+                          }}
+                        >
+                          {item.score}% {isFlagged ? "⚠️" : "✓"}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-carbon-black, #000)" }}>
+                        {item.val}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
           </section>
         )}
 

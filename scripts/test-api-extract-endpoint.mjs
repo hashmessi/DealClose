@@ -21,34 +21,41 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-const address = "2646 Green St, San Francisco, CA 94123";
+const addresses = [
+  "2646 Green St, San Francisco, CA 94123",
+  "10480 Sunset Blvd, Los Angeles, CA 90077",
+  "2100 Waverley St, Palo Alto, CA 94301"
+];
 
-async function test() {
-  console.log("Fetching SerpApi data for:", address);
+async function testOne(address) {
+  console.log(`\n======================================================`);
+  console.log(`TESTING: ${address}`);
+  console.log(`======================================================`);
   const serpUrl = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(
     address + " property details market comps price Zillow Redfin"
   )}&api_key=${process.env.SERPAPI_KEY}`;
   const serpRes = await fetch(serpUrl);
   const rawSerpData = await serpRes.json();
 
-  console.log("Testing extract logic...");
-  // Let's test calling our Next dev server if running on 3000
-  try {
-    const res = await fetch("http://localhost:3000/api/ai/extract", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        address,
-        rawSerpData,
-        dealId: "deal_test_123"
-      })
-    });
-    const data = await res.json();
-    console.log("Next.js /api/ai/extract status:", res.status);
-    console.log("Response:", JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.log("Local server error / not running on port 3000:", err.message);
+  const res = await fetch("http://localhost:3000/api/ai/extract", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      address,
+      rawSerpData,
+      dealId: "deal_test_" + Date.now()
+    })
+  });
+  const data = await res.json();
+  console.log("Offer Price:", `$${data.dealTerms?.offer_price?.toLocaleString()}`);
+  console.log("Flagged Fields:", data.flaggedFields);
+  console.log("Confidence Scores for Flagged Fields:", data.flaggedFields.map(f => `${f}: ${data.confidenceScores?.[f]}%`));
+}
+
+async function run() {
+  for (const a of addresses) {
+    await testOne(a);
   }
 }
 
-test();
+run();
