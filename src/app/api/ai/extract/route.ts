@@ -73,6 +73,69 @@ const PRESEEDED_DEMOS: Record<string, any> = {
     },
     rationale: "Manhattan prime commercial-residential corridor with co-op board review provisions.",
   },
+  "2646 green st": {
+    offer_price: 3850000,
+    earnest_money: 115500,
+    closing_days: 30,
+    contingency_financing: true,
+    contingency_inspection: true,
+    seller_concessions: 15000,
+    closing_costs_buyer: 77000,
+    closing_costs_seller: 57750,
+    confidence_scores: {
+      offer_price: 94,
+      earnest_money: 92,
+      closing_days: 95,
+      contingency_financing: 88,
+      contingency_inspection: 96,
+      closing_costs_buyer: 91,
+      seller_concessions: 72,
+      closing_costs_seller: 77,
+    },
+    rationale: "Pacific Heights prime SF residential comps. Seller transfer tax and local concessions flagged for verification.",
+  },
+  "10480 sunset blvd": {
+    offer_price: 18500000,
+    earnest_money: 555000,
+    closing_days: 30,
+    contingency_financing: false,
+    contingency_inspection: true,
+    seller_concessions: 25000,
+    closing_costs_buyer: 370000,
+    closing_costs_seller: 277500,
+    confidence_scores: {
+      offer_price: 96,
+      earnest_money: 93,
+      closing_days: 94,
+      contingency_financing: 97,
+      contingency_inspection: 92,
+      closing_costs_buyer: 93,
+      seller_concessions: 69,
+      closing_costs_seller: 75,
+    },
+    rationale: "Holmby Hills luxury residential estate. Custom escrow structure and transfer allocation flagged.",
+  },
+  "2100 waverley st": {
+    offer_price: 4950000,
+    earnest_money: 148500,
+    closing_days: 21,
+    contingency_financing: true,
+    contingency_inspection: true,
+    seller_concessions: 10000,
+    closing_costs_buyer: 99000,
+    closing_costs_seller: 74250,
+    confidence_scores: {
+      offer_price: 95,
+      earnest_money: 93,
+      closing_days: 91,
+      contingency_financing: 89,
+      contingency_inspection: 95,
+      closing_costs_buyer: 92,
+      seller_concessions: 70,
+      closing_costs_seller: 78,
+    },
+    rationale: "Old Palo Alto residential comps. High-demand Silicon Valley terms with expedited contingency timeline.",
+  },
 };
 
 
@@ -142,6 +205,7 @@ Rules: confidence_scores 0-100, at least 2 fields <85. Return ONLY JSON.`;
 
 // Fast-response free tier model chain (2.2s strict budget per model)
 const MODEL_CHAIN = [
+  "liquid/lfm-2.5-2.6b:free",
   "minimax/minimax-m2.7:free",
   "z-ai/glm-5.2:free",
 ];
